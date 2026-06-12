@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{defaultLayout}">
+<head>
+    <title>Query Scaffold</title>
+</head>
+<body>
+<main layout:fragment="content">
+
+    <div class="content-header">
+        <h2>Query Scaffold <small style="color:#888;font-size:14px;margin-left:10px;">(local 전용 화면 생성 도구)</small></h2>
+    </div>
+
+    <!-- 입력 카드 -->
+    <div class="card mb-4 shadow-sm border-0">
+        <div class="card-body">
+            <div class="row g-3 mb-3">
+                <div class="col-12 col-md-3">
+                    <label for="moduleName" class="form-label fw-bold">moduleName</label>
+                    <input type="text" id="moduleName" class="form-control" placeholder="sms">
+                </div>
+                <div class="col-12 col-md-3">
+                    <label for="domainId" class="form-label fw-bold">domainId</label>
+                    <input type="text" id="domainId" class="form-control" placeholder="history">
+                </div>
+                <div class="col-12 col-md-3">
+                    <label for="domainClass" class="form-label fw-bold">domainClass</label>
+                    <input type="text" id="domainClass" class="form-control" placeholder="SmsHistory">
+                </div>
+                <div class="col-12 col-md-3">
+                    <label for="domainName" class="form-label fw-bold">domainName</label>
+                    <input type="text" id="domainName" class="form-control" placeholder="발송이력조회">
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="rawQuery" class="form-label fw-bold">조회 SQL (검색조건은 $변수 사용)</label>
+                <textarea id="rawQuery" class="form-control" rows="8" style="font-family:monospace;"
+                          placeholder="SELECT A.SEND_DT, A.RECEIVER_NO, A.SEND_STATUS&#10;FROM SMS_HISTORY A&#10;WHERE 1=1&#10;AND A.SEND_DT &gt;= $start_dt"></textarea>
+            </div>
+            <div class="row g-3 align-items-end">
+                <div class="col-12 col-md-5">
+                    <label for="orderBy" class="form-label fw-bold">정렬 컬럼 (결정적 정렬, tie-breaker 포함)</label>
+                    <input type="text" id="orderBy" class="form-control" placeholder="A.SEND_DT DESC, A.HIST_ID DESC">
+                </div>
+                <div class="col-auto form-check form-switch ms-2">
+                    <input class="form-check-input" type="checkbox" id="includeCreateUpdate">
+                    <label class="form-check-label" for="includeCreateUpdate">등록/수정/삭제</label>
+                </div>
+                <div class="col-auto form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="includeExcel">
+                    <label class="form-check-label" for="includeExcel">엑셀 다운로드</label>
+                </div>
+                <div class="col-auto form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="includePrivacy">
+                    <label class="form-check-label" for="includePrivacy">개인정보 포함(@PrivacyLog)</label>
+                </div>
+                <div class="col-auto ms-auto">
+                    <button type="button" id="btn-generate" class="btn btn-primary px-4">생성</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 결과 카드 -->
+    <div class="card shadow-sm border-0 mb-4" id="result-card" style="display:none;">
+        <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+            <div id="result-tabs" class="d-flex gap-1 flex-wrap"></div>
+            <button type="button" id="btn-copy" class="btn btn-outline-secondary btn-sm">현재 탭 복사</button>
+        </div>
+        <div class="card-body p-0">
+            <pre id="result-content" class="m-0 p-3" style="max-height:520px;overflow:auto;font-size:12px;background:#f8f9fa;"></pre>
+        </div>
+    </div>
+
+</main>
+<th:block layout:fragment="script">
+    <script th:src="@{/js/system/scaffold.js}"></script>
+</th:block>
+</body>
+</html>

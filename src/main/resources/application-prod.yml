@@ -1,0 +1,18 @@
+spring:
+  datasource:
+    jndi-name: java:/comp/env/jdbc/SMS
+
+sms:
+  auth:
+    mode: ldap
+  menu:
+    source: db
+  role:
+    source: db
+  ldap:
+    url: ldap://ldap-prod.example.internal:389
+    base-dn: dc=example,dc=internal
+    manager-dn: cn=sms-service,ou=system,dc=example,dc=internal
+    manager-password: ${SMS_LDAP_MANAGER_PASSWORD}
+    user-search-base: ou=users
+    user-search-filter: "(uid={0})"

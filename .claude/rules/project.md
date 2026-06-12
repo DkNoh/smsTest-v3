@@ -1,0 +1,26 @@
+# Project Rules
+
+- 상세 설계 원문은 `docs/base/*.md`를 따른다.
+- 신규 코드는 `com.example.sms` 패키지 아래에 둔다.
+- 계층은 `controller -> service -> mapper interface -> mapper XML -> Oracle` 순서를 따른다.
+- Controller는 요청/응답과 화면 반환에 집중한다.
+- Service는 트랜잭션과 업무 규칙을 담당한다.
+- Mapper는 SQL 호출만 담당한다.
+- DB 조회 결과는 VO를 사용한다.
+- 요청 파라미터는 DTO를 사용한다.
+- JSON 응답은 `ApiResponse<T>`로 감싼다. 목록 응답은 `ApiResponse<PageResponseDTO<VO>>`를 사용한다.
+- 페이지 응답은 `PageResponseDTO.of(list, request, totalCount)`로만 생성한다.
+- 도메인 검색 DTO는 `PageRequestDTO`를 상속한다.
+- 수정/등록 요청은 `*UpdateRequestDTO`(화이트리스트)로만 받는다. VO를 `@RequestBody`로 받지 않는다.
+- `UpdateRequestDTO`에는 수정 가능한 필드만 선언한다 (REG_*, 시스템/권한 필드 제외).
+- update 결과가 0건이면 `CustomException(ErrorCode.UPDATE_CONFLICT)`로 실패 처리한다.
+- 신규 도메인 코드와 scaffold 생성물은 Lombok을 사용한다 (DTO/VO `@Data`, Service/Controller `@RequiredArgsConstructor`).
+- 기존 BASE 공통 코드(`dto/common`, `exception`, `util`, `auth`, `menu` 등)는 plain Java를 유지한다. 스타일 통일 목적의 리팩토링을 하지 않는다.
+- 예측 가능한 업무 오류는 `CustomException(ErrorCode)`로 던진다.
+- 예외 -> JSON 변환은 `GlobalExceptionHandler`(`@RestControllerAdvice`)에서만 한다.
+- 입력 검증은 `@Valid` + Bean Validation을 사용한다.
+- `@Transactional`은 Service 계층에만 둔다. 조회 메서드는 `readOnly = true`를 우선 검토한다.
+- 신규 코드에서 `Map` 반환은 동적 컬럼처럼 불가피한 경우에만 허용한다.
+- 실패를 fallback으로 우회하지 않는다.
+- 예외를 catch 후 정상 흐름으로 진행하지 않는다.
+- 운영 중 바뀔 값은 `application*.yml`로 외부화한다.

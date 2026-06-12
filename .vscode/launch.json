@@ -1,0 +1,16 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "SMS V3 Local",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.example.sms.SmsV3Application",
+            "projectName": "sms-project-v3",
+            "args": "",
+            "vmArgs": "-Dstdout.encoding=UTF-8 -Dstderr.encoding=UTF-8",
+            "envFile": "${workspaceFolder}/.env.local"
+        }
+    ]
+}

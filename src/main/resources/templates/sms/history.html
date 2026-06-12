@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+    layout:decorate="~{defaultLayout}">
+
+<head>
+    <title>발송이력조회</title>
+</head>
+
+<body>
+    <main layout:fragment="content">
+
+        <div class="content-header">
+            <h2>발송이력조회</h2>
+        </div>
+
+        <!-- 검색조건 카드 -->
+        <div class="card mb-4 shadow-sm border-0">
+            <div class="card-body">
+                <div class="row align-items-center g-3">
+                    <div class="col-auto"><label for="startDt" class="col-form-label fw-bold">startDt</label></div>
+                    <div class="col-auto"><input type="date" id="startDt" class="form-control" style="width:160px;">
+                    </div>
+                    <div class="col-auto ms-auto d-flex gap-2">
+                        <button type="button" id="btn-search" class="btn btn-primary px-4">조회</button>
+                        <button type="button" id="btn-reset" class="btn btn-secondary px-3">초기화</button>
+                        <button type="button" id="btn-excel" class="btn btn-success ms-1">엑셀</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 그리드 카드 -->
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center py-3">
+                <span class="fs-6 fw-medium">총 <strong class="text-primary" id="total-count">0</strong>건</span>
+                <div class="d-flex align-items-center gap-2">
+                    <select id="pageSizeSelect" class="form-select form-select-sm" style="width:80px;">
+                        <option value="10">10건</option>
+                        <option value="20">20건</option>
+                        <option value="50">50건</option>
+                    </select>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <div id="grid" style="width:100%;"></div>
+            </div>
+            <div class="card-footer bg-white border-0 py-3">
+                <div id="pagination" class="d-flex justify-content-center"></div>
+            </div>
+        </div>
+
+    </main>
+    <th:block layout:fragment="script">
+        <script th:src="@{/js/sms/history.js}"></script>
+    </th:block>
+</body>
+
+</html>

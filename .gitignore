@@ -1,0 +1,12 @@
+target/
+*.log
+*.tmp
+*.class
+.settings/
+.project
+.classpath
+.idea/
+*.iml
+.env.local
+.env
+.claude/settings.local.json
