@@ -24,7 +24,7 @@ v3는 화면을 먼저 많이 만드는 프로젝트가 아니다. 먼저 폐쇄
 | `v2-menu-baseline.md` | v2와 동일하게 유지할 운영 메뉴 baseline |
 | `dba-request-menu-auth-ddl.md` | DBA 전달용 신규 테이블 DDL |
 | `screen-convention.md` | v2 기준 화면 규약. 레이아웃/그리드/명명 규칙 |
-| `v2-migration-backlog.md` | v2에서 아직 이관하지 않은 규칙/문서 추적 |
+| `archive/v2-migration-backlog.md` | (보관) v2에서 아직 이관하지 않은 규칙/문서 추적 |
 | `login-page-implementation.md` | 첫 로그인 구현 조각과 검증 결과 |
 | `initial-menu-screen-implementation.md` | DB 기반 초기 메뉴 화면 구현과 검증 결과 |
 | `ui-assets-implementation.md` | v2 공통 UI 자산(레이아웃/그리드/공통 JS) 이식 기록 |
