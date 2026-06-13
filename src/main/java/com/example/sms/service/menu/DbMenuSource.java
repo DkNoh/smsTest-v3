@@ -1,7 +1,9 @@
 package com.example.sms.service.menu;
 
 import com.example.sms.mapper.menu.MenuAuthMapper;
+import com.example.sms.mapper.menu.MenuMapper;
 import com.example.sms.vo.menu.MenuAuthVO;
+import com.example.sms.vo.menu.MenuItemVO;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -11,14 +13,28 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @ConditionalOnProperty(name = "sms.menu.source", havingValue = "db")
-public class DbMenuAuthProvider implements MenuAuthProvider {
+public class DbMenuSource implements MenuSource {
 
     private static final String YES = "Y";
 
+    private final MenuMapper menuMapper;
     private final MenuAuthMapper menuAuthMapper;
+    private final MenuTreeBuilder menuTreeBuilder;
 
-    public DbMenuAuthProvider(MenuAuthMapper menuAuthMapper) {
+    public DbMenuSource(MenuMapper menuMapper, MenuAuthMapper menuAuthMapper, MenuTreeBuilder menuTreeBuilder) {
+        this.menuMapper = menuMapper;
         this.menuAuthMapper = menuAuthMapper;
+        this.menuTreeBuilder = menuTreeBuilder;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<MenuItemVO> getMenuTree(List<String> roleCodes) {
+        if (roleCodes == null || roleCodes.isEmpty()) {
+            throw new IllegalArgumentException("roleCodes must not be empty for db menu source");
+        }
+        List<MenuItemVO> flatMenus = menuMapper.selectReadableMenus(roleCodes);
+        return menuTreeBuilder.build(flatMenus);
     }
 
     @Override

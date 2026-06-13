@@ -20,19 +20,19 @@ class MenuAuthServiceTest {
     private static final List<String> ROLES = List.of("ROLE_USER");
 
     @Mock
-    private MenuAuthProvider menuAuthProvider;
+    private MenuSource menuSource;
 
     private MenuAuthService menuAuthService;
 
     @BeforeEach
     void setUp() {
-        menuAuthService = new MenuAuthService(menuAuthProvider);
+        menuAuthService = new MenuAuthService(menuSource);
     }
 
     @Test
     void 화면_URL은_READ_권한이_있으면_통과한다() {
         // given
-        given(menuAuthProvider.getPermissions("/sms/history", ROLES))
+        given(menuSource.getPermissions("/sms/history", ROLES))
             .willReturn(EnumSet.of(MenuPermission.READ));
 
         // when / then
@@ -43,7 +43,7 @@ class MenuAuthServiceTest {
     @Test
     void suffix와_겹치는_화면_URL은_정확_일치가_우선이다() {
         // given : /campaign/sms/register는 /register suffix가 아니라 화면 메뉴 자체다
-        given(menuAuthProvider.getPermissions("/campaign/sms/register", ROLES))
+        given(menuSource.getPermissions("/campaign/sms/register", ROLES))
             .willReturn(EnumSet.of(MenuPermission.READ));
 
         // when / then
@@ -54,9 +54,9 @@ class MenuAuthServiceTest {
     @Test
     void data_suffix는_부모_화면의_READ_권한으로_판단한다() {
         // given
-        given(menuAuthProvider.getPermissions("/sms/history/data", ROLES))
+        given(menuSource.getPermissions("/sms/history/data", ROLES))
             .willReturn(EnumSet.noneOf(MenuPermission.class));
-        given(menuAuthProvider.getPermissions("/sms/history", ROLES))
+        given(menuSource.getPermissions("/sms/history", ROLES))
             .willReturn(EnumSet.of(MenuPermission.READ));
 
         // when / then
@@ -67,9 +67,9 @@ class MenuAuthServiceTest {
     @Test
     void excel_suffix는_DOWNLOAD_권한이_없으면_거부한다() {
         // given : READ만 있고 DOWNLOAD가 없다
-        given(menuAuthProvider.getPermissions("/sms/history/excel", ROLES))
+        given(menuSource.getPermissions("/sms/history/excel", ROLES))
             .willReturn(EnumSet.noneOf(MenuPermission.class));
-        given(menuAuthProvider.getPermissions("/sms/history", ROLES))
+        given(menuSource.getPermissions("/sms/history", ROLES))
             .willReturn(EnumSet.of(MenuPermission.READ));
 
         // when / then
@@ -82,9 +82,9 @@ class MenuAuthServiceTest {
     @Test
     void legacy_save는_CREATE와_UPDATE를_모두_요구한다() {
         // given : CREATE만 있다
-        given(menuAuthProvider.getPermissions("/system/message/save", ROLES))
+        given(menuSource.getPermissions("/system/message/save", ROLES))
             .willReturn(EnumSet.noneOf(MenuPermission.class));
-        given(menuAuthProvider.getPermissions("/system/message", ROLES))
+        given(menuSource.getPermissions("/system/message", ROLES))
             .willReturn(EnumSet.of(MenuPermission.READ, MenuPermission.CREATE));
 
         // when / then
@@ -95,9 +95,9 @@ class MenuAuthServiceTest {
     @Test
     void legacy_save는_CREATE와_UPDATE가_모두_있으면_통과한다() {
         // given
-        given(menuAuthProvider.getPermissions("/system/message/save", ROLES))
+        given(menuSource.getPermissions("/system/message/save", ROLES))
             .willReturn(EnumSet.noneOf(MenuPermission.class));
-        given(menuAuthProvider.getPermissions("/system/message", ROLES))
+        given(menuSource.getPermissions("/system/message", ROLES))
             .willReturn(EnumSet.of(MenuPermission.CREATE, MenuPermission.UPDATE));
 
         // when / then
@@ -108,7 +108,7 @@ class MenuAuthServiceTest {
     @Test
     void 화면_URL에_READ가_없으면_거부한다() {
         // given : 메뉴 권한 행은 있지만 READ가 'N'이다
-        given(menuAuthProvider.getPermissions("/sms/history", ROLES))
+        given(menuSource.getPermissions("/sms/history", ROLES))
             .willReturn(EnumSet.of(MenuPermission.DOWNLOAD));
 
         // when / then
@@ -119,7 +119,7 @@ class MenuAuthServiceTest {
     @Test
     void 메뉴에_연결되지_않은_URL은_거부한다() {
         // given
-        given(menuAuthProvider.getPermissions("/unknown/path", ROLES))
+        given(menuSource.getPermissions("/unknown/path", ROLES))
             .willReturn(EnumSet.noneOf(MenuPermission.class));
 
         // when / then

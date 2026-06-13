@@ -23,14 +23,14 @@ public class MenuAuthService {
     /** URL suffix -> 필요 권한. 등록/수정 겸용 legacy /save는 CREATE와 UPDATE를 모두 요구한다. */
     private static final Map<String, Set<MenuPermission>> SUFFIX_PERMISSIONS = createSuffixPermissions();
 
-    private final MenuAuthProvider menuAuthProvider;
+    private final MenuSource menuSource;
 
-    public MenuAuthService(MenuAuthProvider menuAuthProvider) {
-        this.menuAuthProvider = menuAuthProvider;
+    public MenuAuthService(MenuSource menuSource) {
+        this.menuSource = menuSource;
     }
 
     public void checkAccess(String path, List<String> roleCodes) {
-        Set<MenuPermission> screenPermissions = menuAuthProvider.getPermissions(path, roleCodes);
+        Set<MenuPermission> screenPermissions = menuSource.getPermissions(path, roleCodes);
         if (!screenPermissions.isEmpty()) {
             if (screenPermissions.contains(MenuPermission.READ)) {
                 return;
@@ -44,7 +44,7 @@ public class MenuAuthService {
                 continue;
             }
             String baseUrl = path.substring(0, path.length() - suffix.length());
-            Set<MenuPermission> basePermissions = menuAuthProvider.getPermissions(baseUrl, roleCodes);
+            Set<MenuPermission> basePermissions = menuSource.getPermissions(baseUrl, roleCodes);
             if (basePermissions.containsAll(entry.getValue())) {
                 return;
             }

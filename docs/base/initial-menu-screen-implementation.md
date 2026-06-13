@@ -18,7 +18,7 @@ local 로그인 성공
  -> SMS.EMP + SMS.DEP 활성 사용자 확인
  -> EmployeeRoleService가 sms.role.source에 따라 역할 조회
  -> principal에 roleCodes 저장
- -> / 접근 시 MenuService가 sms.menu.source에 따라 메뉴 tree 생성
+ -> / 접근 시 MenuSource가 sms.menu.source에 따라 메뉴 tree 생성
  -> 좌측 메뉴와 메뉴 개요 화면 렌더링
 ```
 
@@ -33,9 +33,9 @@ local 로그인 성공
 
 | 파일 | 내용 |
 |---|---|
-| `src/main/java/com/example/sms/service/menu/MenuProvider.java` | 메뉴 source 공통 인터페이스 |
-| `src/main/java/com/example/sms/service/menu/StaticMenuProvider.java` | v2 baseline 정적 메뉴 |
-| `src/main/java/com/example/sms/service/menu/DbMenuProvider.java` | DB 기반 메뉴 조회 |
+| `src/main/java/com/example/sms/service/menu/MenuSource.java` | 메뉴 트리/권한 source 공통 인터페이스 |
+| `src/main/java/com/example/sms/service/menu/StaticMenuSource.java` | v2 baseline 정적 메뉴/권한 |
+| `src/main/java/com/example/sms/service/menu/DbMenuSource.java` | DB 기반 메뉴/권한 조회 |
 | `src/main/java/com/example/sms/service/menu/MenuTreeBuilder.java` | flat 메뉴를 tree로 변환하고 부모 누락/중복 검증 |
 | `src/main/java/com/example/sms/service/menu/RoleProvider.java` | 역할 source 공통 인터페이스 |
 | `src/main/java/com/example/sms/service/menu/StaticRoleProvider.java` | local 임시 역할 부여 |

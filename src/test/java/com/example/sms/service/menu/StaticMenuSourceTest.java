@@ -7,15 +7,15 @@ import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-class StaticMenuAuthProviderTest {
+class StaticMenuSourceTest {
 
     private static final List<String> ROLES = List.of("ROLE_ADMIN");
 
-    private StaticMenuAuthProvider provider;
+    private StaticMenuSource provider;
 
     @BeforeEach
     void setUp() {
-        provider = new StaticMenuAuthProvider(new StaticMenuProvider(new MenuTreeBuilder()));
+        provider = new StaticMenuSource(new MenuTreeBuilder());
     }
 
     @Test

@@ -1,7 +1,7 @@
 package com.example.sms.controller;
 
 import com.example.sms.auth.SmsUserPrincipal;
-import com.example.sms.service.menu.MenuService;
+import com.example.sms.service.menu.MenuSource;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -14,10 +14,10 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 @ControllerAdvice
 public class GlobalModelAdvice {
 
-    private final MenuService menuService;
+    private final MenuSource menuSource;
 
-    public GlobalModelAdvice(MenuService menuService) {
-        this.menuService = menuService;
+    public GlobalModelAdvice(MenuSource menuSource) {
+        this.menuSource = menuSource;
     }
 
     @ModelAttribute
@@ -26,6 +26,6 @@ public class GlobalModelAdvice {
             return;
         }
         model.addAttribute("user", principal);
-        model.addAttribute("menus", menuService.getMenuTree(principal.getRoleCodes()));
+        model.addAttribute("menus", menuSource.getMenuTree(principal.getRoleCodes()));
     }
 }

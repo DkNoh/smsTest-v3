@@ -59,9 +59,9 @@ sms:
 | 파일 | 역할 |
 |---|---|
 | `service/menu/MenuPermission.java` | CAN_* 8종과 1:1 대응하는 권한 enum |
-| `service/menu/MenuAuthProvider.java` | 권한 조회 인터페이스 (source 공통) |
-| `service/menu/DbMenuAuthProvider.java` | `sms.menu.source=db` 전용. TB_MENU_AUTH 조회 |
-| `service/menu/StaticMenuAuthProvider.java` | `sms.menu.source=static` 전용. baseline URL 전체 권한 |
+| `service/menu/MenuSource.java` | 메뉴 트리+권한 조회 인터페이스 (source 공통) |
+| `service/menu/DbMenuSource.java` | `sms.menu.source=db` 전용. TB_MENU/TB_MENU_AUTH 조회 |
+| `service/menu/StaticMenuSource.java` | `sms.menu.source=static` 전용. baseline URL 전체 권한 |
 | `service/menu/MenuAuthService.java` | URL -> 권한 판정. 실패 시 `CustomException(ACCESS_DENIED)` |
 | `mapper/menu/MenuAuthMapper.java` / `.xml` | URL + 역할 기준 CAN_* MAX 집계 조회 |
 | `vo/menu/MenuAuthVO.java` | 권한 조회 결과 VO |
