@@ -25,4 +25,5 @@ paths:
 - dev/prod 기본값은 `sms.menu.source=db`, `sms.role.source=db`다.
 - dev에서 `static` 메뉴 검증이 필요하면 사유를 문서에 기록하고 일시적으로만 사용한다. 이 경우에도 `sms.role.source`는 `db`를 유지한다.
 - prod는 `db`만 사용한다.
-- 메뉴 seed 변경 시 `docs/base/v2-menu-baseline.md`, `StaticMenuProvider`, `db/oracle/02_menu_auth_seed.sql`을 함께 갱신한다.
+- 위 source 조합은 `AuthSourceGuard`가 부팅 시 강제한다. prod에 static이 들어가거나 `menu=db`+`role=static` 조합이면 부팅이 실패한다.
+- 메뉴 seed 변경 시 `docs/base/v2-menu-baseline.md`, `StaticMenuSource`, `db/oracle/02_menu_auth_seed.sql`을 함께 갱신한다.
