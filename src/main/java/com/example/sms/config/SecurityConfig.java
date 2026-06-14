@@ -6,7 +6,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -23,7 +22,8 @@ public class SecurityConfig {
         }
 
         http
-            .csrf(AbstractHttpConfigurer::disable)
+            // CSRF 활성화(Spring Security 기본값). Thymeleaf 폼(th:action)은 토큰을 자동 주입하고,
+            // axios 호출은 common-utils.js 요청 인터셉터가 <meta name="_csrf">를 헤더로 싣는다.
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/login", "/error").permitAll()
                 .requestMatchers("/css/**", "/js/**", "/lib/**", "/vendor/**", "/img/**", "/favicon.ico").permitAll()

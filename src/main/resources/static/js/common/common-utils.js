@@ -155,6 +155,12 @@ const hideSpinner = () => {
 axios.interceptors.request.use(
     config => {
         showSpinner();
+        // CSRF: 서버 csrf 활성화 대응. <meta>의 토큰을 요청 헤더로 싣는다 (GET 등 비변경 요청은 서버가 무시)
+        const csrfToken = document.querySelector('meta[name="_csrf"]');
+        const csrfHeader = document.querySelector('meta[name="_csrf_header"]');
+        if (csrfToken && csrfHeader && csrfToken.content && csrfHeader.content) {
+            config.headers[csrfHeader.content] = csrfToken.content;
+        }
         return config;
     },
     error => {

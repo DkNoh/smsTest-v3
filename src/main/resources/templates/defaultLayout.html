@@ -4,6 +4,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- CSRF: axios 요청 인터셉터(common-utils.js)가 이 메타 값을 헤더로 싣는다 -->
+    <meta name="_csrf" th:content="${_csrf != null ? _csrf.token : ''}"/>
+    <meta name="_csrf_header" th:content="${_csrf != null ? _csrf.headerName : ''}"/>
     <title>SMS전송시스템</title>
 
     <!-- Toast UI & 기타 라이브러리 (로컬 참조) -->
