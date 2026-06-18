@@ -25,7 +25,8 @@
                 A.SEND_TYPE AS SEND_TYPE,
                 A.SEND_STATUS AS SEND_STATUS,
                 A.RESULT_CD AS RESULT_CD,
-                A.RESULT_MSG AS RESULT_MSG
+                A.RESULT_MSG AS RESULT_MSG,
+                A.UPD_DTTM AS UPD_DTTM
             FROM SMS.SMS_HISTORY A
             WHERE 1=1
                 <if test="sendType != null and sendType != ''">
@@ -56,7 +57,8 @@
                 A.SEND_TYPE AS SEND_TYPE,
                 A.SEND_STATUS AS SEND_STATUS,
                 A.RESULT_CD AS RESULT_CD,
-                A.RESULT_MSG AS RESULT_MSG
+                A.RESULT_MSG AS RESULT_MSG,
+                A.UPD_DTTM AS UPD_DTTM
             FROM SMS.SMS_HISTORY A
             WHERE 1=1
                 <if test="sendType != null and sendType != ''">
@@ -78,27 +80,50 @@
     </select>
 
     <insert id="insert">
-        INSERT INTO /* TODO: 테이블명 */ (REG_DTTM) VALUES (SYSTIMESTAMP)
+        INSERT INTO SMS.SMS_HISTORY (
+            REQUEST_ID,
+            SENT_AT,
+            RECEIVER_NO,
+            SENDER_NO,
+            SEND_TYPE,
+            SEND_STATUS,
+            RESULT_CD,
+            RESULT_MSG,
+            REG_ID,
+            UPD_DTTM
+        ) VALUES (
+            'REQ' || TO_CHAR(SYSTIMESTAMP, 'YYYYMMDDHH24MISSFF3') || SUBSTR(RAWTOHEX(SYS_GUID()), 1, 8),
+            #{sentAt,jdbcType=TIMESTAMP},
+            #{receiverNo,jdbcType=VARCHAR},
+            #{senderNo,jdbcType=VARCHAR},
+            #{sendType,jdbcType=VARCHAR},
+            NVL(#{sendStatus,jdbcType=VARCHAR}, 'SENT'),
+            #{resultCd,jdbcType=VARCHAR},
+            #{resultMsg,jdbcType=VARCHAR},
+            'LOCAL',
+            SYSTIMESTAMP
+        )
     </insert>
 
-    <!-- update 기준: 수정 컬럼만 SET하고, 낙관적 잠금으로 UPDATE_DTTM을 WHERE에 함께 둔다.
-         갱신값은 컬럼 타입 확인 후 선택한다: TIMESTAMP -> SYSTIMESTAMP, CHAR(14) -> TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') -->
+    <!-- update 기준: 수정 허용 컬럼만 SET하고, 잠금 컬럼을 지정한 경우 WHERE에 함께 둔다. -->
     <update id="update">
-        UPDATE /* TODO: 테이블명 */
-           SET SENT_AT = #{sentAt},
-               RECEIVER_NO = #{receiverNo},
-               SENDER_NO = #{senderNo},
-               SEND_TYPE = #{sendType},
-               SEND_STATUS = #{sendStatus},
-               RESULT_CD = #{resultCd},
-               RESULT_MSG = #{resultMsg},
-               SMS_HISTORY_ID = SYSTIMESTAMP
+        UPDATE SMS.SMS_HISTORY
+           SET SENT_AT = #{sentAt,jdbcType=TIMESTAMP},
+               RECEIVER_NO = #{receiverNo,jdbcType=VARCHAR},
+               SENDER_NO = #{senderNo,jdbcType=VARCHAR},
+               SEND_TYPE = #{sendType,jdbcType=VARCHAR},
+               SEND_STATUS = #{sendStatus,jdbcType=VARCHAR},
+               RESULT_CD = #{resultCd,jdbcType=VARCHAR},
+               RESULT_MSG = #{resultMsg,jdbcType=VARCHAR},
+               UPD_ID = 'LOCAL',
+               UPD_DTTM = SYSTIMESTAMP
          WHERE SMS_HISTORY_ID = #{smsHistoryId}
-           AND SMS_HISTORY_ID = #{beforeSmsHistoryId}
+           AND (UPD_DTTM = #{beforeUpdDttm,jdbcType=TIMESTAMP}
+                OR (UPD_DTTM IS NULL AND #{beforeUpdDttm,jdbcType=TIMESTAMP} IS NULL))
     </update>
 
     <delete id="delete">
-        DELETE FROM /* TODO: 테이블명 */ WHERE SMS_HISTORY_ID = #{smsHistoryId}
+        DELETE FROM SMS.SMS_HISTORY WHERE SMS_HISTORY_ID = #{smsHistoryId}
     </delete>
 
 </mapper>

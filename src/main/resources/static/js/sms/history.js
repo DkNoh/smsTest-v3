@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', function () {
         el: 'grid',
         apiUrl: '/sms/history/data',
         searchInputs: ['sendType', 'sendStatus', 'sentAt', 'receiverNo'],
-        searchDefaults: {sentAt: 'RECENT_7_DAYS'},
+        searchDefaults: {},
         rowHeaders: ['rowNum'],
         columns: [
             { header: 'SMS_HISTORY_ID', name: 'smsHistoryId', align: 'center', width: 150 },
@@ -14,16 +14,18 @@ document.addEventListener('DOMContentLoaded', function () {
             { header: 'SEND_TYPE', name: 'sendType', align: 'center', width: 150, editable: true },
             { header: 'SEND_STATUS', name: 'sendStatus', align: 'center', width: 150, editable: true },
             { header: 'RESULT_CD', name: 'resultCd', align: 'center', width: 150, editable: true },
-            { header: 'RESULT_MSG', name: 'resultMsg', align: 'center', width: 150, editable: true }
+            { header: 'RESULT_MSG', name: 'resultMsg', align: 'center', width: 150, editable: true },
+            { header: 'UPD_DTTM', name: 'updDttm', hidden: true, modalVisible: false }
         ],
         autoModal: true,
         autoModalTitle: '발송이력조회 상세',
         modalActions: {
+            createUrl: '/sms/history/create',
             updateUrl: '/sms/history/update',
             deleteUrl: '/sms/history/delete',
             pkField: 'smsHistoryId',
-            lockField: 'smsHistoryId',
-            beforeLockField: 'beforeSmsHistoryId',
+            lockField: 'updDttm',
+            beforeLockField: 'beforeUpdDttm',
             editable: true
         }
     });

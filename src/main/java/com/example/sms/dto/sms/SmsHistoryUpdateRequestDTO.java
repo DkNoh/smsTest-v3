@@ -22,6 +22,6 @@ public class SmsHistoryUpdateRequestDTO {
     private String resultCd;
     private String resultMsg;
 
-    /** 낙관적 잠금용. 조회 시점의 SMS_HISTORY_ID (hidden으로 받는다) */
-    private String beforeSmsHistoryId;
+    /** 낙관적 잠금용. 조회 시점의 UPD_DTTM (hidden으로 받는다) */
+    private LocalDateTime beforeUpdDttm;
 }

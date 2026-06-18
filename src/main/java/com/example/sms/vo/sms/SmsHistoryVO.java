@@ -16,4 +16,5 @@ public class SmsHistoryVO {
     private String sendStatus;
     private String resultCd;
     private String resultMsg;
+    private LocalDateTime updDttm;
 }

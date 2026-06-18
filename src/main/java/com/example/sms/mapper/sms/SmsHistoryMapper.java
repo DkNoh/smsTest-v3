@@ -5,6 +5,7 @@ import com.example.sms.dto.sms.SmsHistoryUpdateRequestDTO;
 import com.example.sms.vo.sms.SmsHistoryVO;
 import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 @Mapper
 public interface SmsHistoryMapper {
@@ -17,5 +18,5 @@ public interface SmsHistoryMapper {
 
     int update(SmsHistoryUpdateRequestDTO request);
 
-    int delete(Integer smsHistoryId);
+    int delete(@Param("smsHistoryId") Integer smsHistoryId);
 }

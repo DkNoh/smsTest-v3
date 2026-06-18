@@ -37,6 +37,7 @@
                 <div class="col-auto"><label for="receiverNo" class="col-form-label fw-bold">receiverNo</label></div>
                 <div class="col-auto"><input type="text" id="receiverNo" class="form-control scaffold-search-control"></div>
                 <div class="col-auto ms-auto d-flex gap-2">
+                    <button type="button" id="btn-create" th:if="${pageAuth.create}" class="btn btn-outline-primary px-3"><i data-lucide="plus"></i><span>등록</span></button>
                     <button type="button" id="btn-search" class="btn btn-primary px-4"><i data-lucide="search"></i><span>조회</span></button>
                     <button type="button" id="btn-reset" class="btn btn-secondary px-3"><i data-lucide="rotate-ccw"></i><span>초기화</span></button>
                 </div>
