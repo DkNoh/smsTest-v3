@@ -33,9 +33,12 @@ class TuiPageBuilder {
             pageSizeEl: 'pageSizeSelect',
             btnSearch: 'btn-search',
             btnReset: 'btn-reset',
+            btnCreate: 'btn-create',
             paginationId: 'pagination',
             totalCountSelector: '#total-count',
             gridOptions: {},          // 화면별 그리드 옵션 예외 (gridDefaults 위에 덮어씀)
+            searchDefaults: {},       // 검색조건 기본값. 예: { startDt: 'THIS_MONTH', endDt: 'TODAY' }
+            datePickerInputs: null,   // 비우면 data-search-type="date" 검색조건을 자동 감지한다
             onGridUpdated: null,
             // [API 단건 조회(패턴B) 옵션]
             detailApiUrl: null,       // 예: '/sample/detail'
@@ -43,13 +46,19 @@ class TuiPageBuilder {
             onDetailLoaded: null,     // API 통신 성공 후 DTO를 받을 콜백
             // [단순 뷰어(패턴C) 자동 생성 옵션]
             autoModal: false,         // true 설정 시 그리드 컬럼 메타를 이용해 자동 모달 띄움
-            autoModalTitle: '상세 정보'
+            autoModalTitle: '상세 정보',
+            autoModalCreateTitle: null,
+            modalActions: null        // { updateUrl, deleteUrl, pkField, lockField, beforeLockField, editable }
         }, config);
 
         // 2. 내부 상태 변수 초기화
         this.grid = null;           
         this.currentPage = 1;       
         this.currentSize = 10;      
+        this.usesOffsetRowNo = false;
+        this.currentModalRow = null;
+        this.currentModalMode = 'detail';
+        this.searchDatePickers = {};
 
         // 3. 페이지 로드 시 콤보박스 동기화
         const sizeEl = document.getElementById(this.config.pageSizeEl);
@@ -59,6 +68,8 @@ class TuiPageBuilder {
         if (typeof CommonUtils !== 'undefined' && typeof CommonUtils.setDefaultDateTime === 'function') {
             CommonUtils.setDefaultDateTime();
         }
+        this._applySearchDefaults(false);
+        this._initSearchDatePickers();
 
         // 5. 그리드 렌더링 및 이벤트 바인딩
         this._initGrid();
@@ -75,10 +86,17 @@ class TuiPageBuilder {
             ? TuiCommon.gridDefaults
             : { scrollX: false, scrollY: false, minBodyHeight: 300 };
 
+        const requestedRowHeaders = this.config.rowHeaders || [];
+        this.usesOffsetRowNo = requestedRowHeaders.some(rh => this._isRowNumHeader(rh));
+        const rowHeaders = requestedRowHeaders.filter(rh => !this._isRowNumHeader(rh));
+        const columns = this.usesOffsetRowNo && !this.config.columns.some(col => col.name === 'rowNo')
+            ? [this._rowNoColumn()].concat(this.config.columns)
+            : this.config.columns;
+
         this.grid = new tui.Grid(Object.assign({}, defaults, this.config.gridOptions, {
             el: document.getElementById(this.config.el),
-            rowHeaders: this.config.rowHeaders,
-            columns: this.config.columns
+            rowHeaders: rowHeaders,
+            columns: columns
         }));
 
         // 더블클릭 이벤트 바인딩 (하이브리드 모달 로직 적용)
@@ -110,55 +128,338 @@ class TuiPageBuilder {
      * [내부 메서드] TUI Grid 컬럼 정의를 기반으로 자동 팝업 DOM을 생성하고 데이터를 바인딩합니다.
      */
     _showAutoModal(row) {
+        const modal = this._ensureAutoModal();
+        this.currentModalMode = 'detail';
+        this.currentModalRow = row;
+        document.getElementById('tui-auto-modal-title').textContent = this.config.autoModalTitle;
+        
+        const formEl = document.getElementById('tui-auto-modal-form');
+        formEl.innerHTML = ''; // 초기화
+
+        // 컬럼 정의(this.config.columns)를 순회하며 행 데이터를 바인딩
+        this.config.columns.forEach(col => {
+            if (col.modalVisible === false) {
+                return;
+            }
+            const rawVal = row[col.name];
+            const formValue = rawVal === null || rawVal === undefined ? '' : rawVal;
+
+            const rowDiv = document.createElement('div');
+            rowDiv.className = 'detail-row';
+            const labelDiv = document.createElement('div');
+            labelDiv.className = 'detail-label';
+            labelDiv.textContent = col.header;
+
+            const valueDiv = document.createElement('div');
+            valueDiv.className = 'detail-value';
+            if (this._isAutoModalEditable() && col.editable === true) {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.name = col.name;
+                input.className = 'form-control form-control-sm detail-input';
+                input.value = formValue;
+                valueDiv.appendChild(input);
+            } else if (col.formatter && typeof col.formatter === 'function') {
+                valueDiv.innerHTML = `<span class="detail-readonly">${col.formatter({ value: rawVal, row: row }) || '-'}</span>`;
+            } else {
+                const readonly = document.createElement('span');
+                readonly.className = 'detail-readonly';
+                readonly.textContent = formValue || '-';
+                valueDiv.appendChild(readonly);
+            }
+
+            rowDiv.appendChild(labelDiv);
+            rowDiv.appendChild(valueDiv);
+            formEl.appendChild(rowDiv);
+        });
+        this._appendActionHiddenFields(formEl, row);
+        this._syncAutoModalActionButtons();
+
+        this._showModalElement(modal);
+        this._refreshIcons();
+    }
+
+    _ensureAutoModal() {
         let modal = document.getElementById('tui-auto-modal');
         if (!modal) {
             modal = document.createElement('div');
             modal.id = 'tui-auto-modal';
-            modal.className = 'modal-overlay';
+            modal.className = 'modal fade';
+            modal.tabIndex = -1;
+            modal.setAttribute('aria-hidden', 'true');
+            modal.setAttribute('aria-labelledby', 'tui-auto-modal-title');
             modal.innerHTML = `
-                <div class="modal-box">
-                    <div class="modal-header">
-                        <h3 id="tui-auto-modal-title"></h3>
-                        <button type="button" class="modal-close" onclick="document.getElementById('tui-auto-modal').classList.remove('open')">&times;</button>
-                    </div>
-                    <div class="modal-body" id="tui-auto-modal-body" style="max-height: 70vh; overflow-y: auto;">
-                        <!-- 자동 주입 -->
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" onclick="document.getElementById('tui-auto-modal').classList.remove('open')">닫기</button>
+                <div class="modal-dialog modal-dialog-centered modal-lg">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="tui-auto-modal-title"></h5>
+                            <button type="button" class="btn-close" id="tui-auto-modal-close" aria-label="닫기"></button>
+                        </div>
+                        <div class="modal-body tui-auto-modal-body">
+                            <form id="tui-auto-modal-form"></form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-primary d-none" id="tui-auto-modal-create">
+                                <i data-lucide="plus"></i><span>등록</span>
+                            </button>
+                            <button type="button" class="btn btn-danger d-none" id="tui-auto-modal-delete">
+                                <i data-lucide="trash-2"></i><span>삭제</span>
+                            </button>
+                            <button type="button" class="btn btn-primary d-none" id="tui-auto-modal-update">
+                                <i data-lucide="save"></i><span>수정</span>
+                            </button>
+                            <button type="button" class="btn btn-secondary" id="tui-auto-modal-cancel">
+                                <i data-lucide="x"></i><span>닫기</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             `;
             document.body.appendChild(modal);
+            document.getElementById('tui-auto-modal-close').addEventListener('click', () => this._closeAutoModal());
+            document.getElementById('tui-auto-modal-cancel').addEventListener('click', () => this._closeAutoModal());
+            document.getElementById('tui-auto-modal-create').addEventListener('click', () => this._createAutoModalRow());
+            document.getElementById('tui-auto-modal-update').addEventListener('click', () => this._updateAutoModalRow());
+            document.getElementById('tui-auto-modal-delete').addEventListener('click', () => this._deleteAutoModalRow());
+            modal.addEventListener('click', e => {
+                if (e.target.id === 'tui-auto-modal') {
+                    this._closeAutoModal();
+                }
+            });
         }
+        return modal;
+    }
 
-        document.getElementById('tui-auto-modal-title').textContent = this.config.autoModalTitle;
-        
-        const bodyEl = document.getElementById('tui-auto-modal-body');
-        bodyEl.innerHTML = ''; // 초기화
+    _showCreateModal() {
+        const actions = this.config.modalActions || {};
+        if (!actions.createUrl || !this._hasPagePermission('create')) {
+            return;
+        }
+        const modal = this._ensureAutoModal();
+        this.currentModalMode = 'create';
+        this.currentModalRow = null;
+        document.getElementById('tui-auto-modal-title').textContent =
+            this.config.autoModalCreateTitle || this.config.autoModalTitle.replace(/\s*상세\s*$/, '') + ' 등록';
 
-        // 컬럼 정의(this.config.columns)를 순회하며 행 데이터를 바인딩
+        const formEl = document.getElementById('tui-auto-modal-form');
+        formEl.innerHTML = '';
+        let editableCount = 0;
+
         this.config.columns.forEach(col => {
-            // hidden 컬럼이거나 불필요한 필드는 제외하고 싶다면 col.hidden 체크를 추가할 수 있습니다.
-            if (col.hidden) return;
-            
-            const rawVal = row[col.name];
-            // formatter가 있으면 실행한 결과를 HTML로 넣고, 없으면 텍스트로
-            const valHTML = col.formatter && typeof col.formatter === 'function' 
-                            ? col.formatter({ value: rawVal, row: row }) 
-                            : (rawVal || '-');
-
+            if (col.modalVisible === false || col.editable !== true) {
+                return;
+            }
+            editableCount++;
             const rowDiv = document.createElement('div');
             rowDiv.className = 'detail-row';
-            rowDiv.innerHTML = `
-                <div class="detail-label">${col.header}</div>
-                <div class="detail-value">${valHTML}</div>
-            `;
-            bodyEl.appendChild(rowDiv);
-        });
+            const labelDiv = document.createElement('div');
+            labelDiv.className = 'detail-label';
+            labelDiv.textContent = col.header;
 
-        // 애니메이션 효과와 함께 모달 열기
-        modal.classList.add('open');
+            const valueDiv = document.createElement('div');
+            valueDiv.className = 'detail-value';
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.name = col.name;
+            input.className = 'form-control form-control-sm detail-input';
+            valueDiv.appendChild(input);
+
+            rowDiv.appendChild(labelDiv);
+            rowDiv.appendChild(valueDiv);
+            formEl.appendChild(rowDiv);
+        });
+        if (editableCount === 0) {
+            formEl.innerHTML = '<div class="text-secondary py-3">등록 가능한 컬럼이 없습니다.</div>';
+        }
+        this._syncAutoModalActionButtons();
+
+        this._showModalElement(modal);
+        this._refreshIcons();
+    }
+
+    _closeAutoModal() {
+        this._hideModalElement(document.getElementById('tui-auto-modal'));
+    }
+
+    _isAutoModalEditable() {
+        return !!(this.config.modalActions && this.config.modalActions.editable && this._hasPagePermission('update'));
+    }
+
+    _appendActionHiddenFields(formEl, row) {
+        const actions = this.config.modalActions;
+        if (!actions) {
+            return;
+        }
+        if (actions.pkField) {
+            this._appendHidden(formEl, actions.pkField, row[actions.pkField]);
+        }
+        if (actions.beforeLockField) {
+            const lockValue = actions.lockField ? row[actions.lockField] : '';
+            this._appendHidden(formEl, actions.beforeLockField, lockValue);
+        }
+    }
+
+    _appendHidden(formEl, name, value) {
+        if (!name) {
+            return;
+        }
+        const hidden = document.createElement('input');
+        hidden.type = 'hidden';
+        hidden.name = name;
+        hidden.value = value === null || value === undefined ? '' : value;
+        formEl.appendChild(hidden);
+    }
+
+    _syncAutoModalActionButtons() {
+        const actions = this.config.modalActions || {};
+        const createBtn = document.getElementById('tui-auto-modal-create');
+        const updateBtn = document.getElementById('tui-auto-modal-update');
+        const deleteBtn = document.getElementById('tui-auto-modal-delete');
+        const createMode = this.currentModalMode === 'create';
+        if (createBtn) {
+            createBtn.classList.toggle('d-none', !createMode || !actions.createUrl || !this._hasPagePermission('create'));
+        }
+        if (updateBtn) {
+            updateBtn.classList.toggle('d-none', createMode || !actions.updateUrl || !this._hasPagePermission('update'));
+        }
+        if (deleteBtn) {
+            deleteBtn.classList.toggle('d-none', createMode || !actions.deleteUrl || !this._hasPagePermission('delete'));
+        }
+    }
+
+    _createAutoModalRow() {
+        const actions = this.config.modalActions || {};
+        if (!actions.createUrl || !this._hasPagePermission('create')) {
+            return;
+        }
+        const payload = this._readAutoModalForm();
+        axios.post(actions.createUrl, payload)
+            .then(() => {
+                this._closeAutoModal();
+                if (typeof CommonUtils !== 'undefined') {
+                    CommonUtils.toast('등록되었습니다.', 'success');
+                }
+                this.searchData(1);
+            })
+            .catch(err => console.error('[TuiPageBuilder] 등록 실패', err));
+    }
+
+    _updateAutoModalRow() {
+        const actions = this.config.modalActions || {};
+        if (!actions.updateUrl || !this._hasPagePermission('update')) {
+            return;
+        }
+        const payload = this._readAutoModalForm();
+        axios.post(actions.updateUrl, payload)
+            .then(() => {
+                this._closeAutoModal();
+                if (typeof CommonUtils !== 'undefined') {
+                    CommonUtils.toast('수정되었습니다.', 'success');
+                }
+                this.searchData(this.currentPage);
+            })
+            .catch(err => console.error('[TuiPageBuilder] 수정 실패', err));
+    }
+
+    _deleteAutoModalRow() {
+        const actions = this.config.modalActions || {};
+        if (!actions.deleteUrl || !this._hasPagePermission('delete') || !actions.pkField || !this.currentModalRow) {
+            return;
+        }
+        const pkValue = this.currentModalRow[actions.pkField];
+        if (pkValue === null || pkValue === undefined || pkValue === '') {
+            if (typeof CommonUtils !== 'undefined') {
+                CommonUtils.toast('삭제 기준 PK 값이 없습니다.', 'warning');
+            }
+            return;
+        }
+
+        const runDelete = () => {
+            axios.post(actions.deleteUrl, null, { params: { [actions.pkField]: pkValue } })
+                .then(() => {
+                    this._closeAutoModal();
+                    if (typeof CommonUtils !== 'undefined') {
+                        CommonUtils.toast('삭제되었습니다.', 'success');
+                    }
+                    this.searchData(this.currentPage);
+                })
+                .catch(err => console.error('[TuiPageBuilder] 삭제 실패', err));
+        };
+
+        if (typeof CommonUtils !== 'undefined' && CommonUtils.confirm) {
+            CommonUtils.confirm('삭제하시겠습니까?', runDelete, '삭제 확인');
+        } else if (window.confirm('삭제하시겠습니까?')) {
+            runDelete();
+        }
+    }
+
+    _readAutoModalForm() {
+        if (typeof FormBinder !== 'undefined') {
+            return FormBinder.toObject('#tui-auto-modal-form');
+        }
+        const result = {};
+        document.querySelectorAll('#tui-auto-modal-form input[name], #tui-auto-modal-form select[name], #tui-auto-modal-form textarea[name]')
+            .forEach(field => {
+                result[field.name] = field.value === '' ? null : field.value;
+            });
+        return result;
+    }
+
+    _refreshIcons() {
+        if (typeof CommonUtils !== 'undefined' && CommonUtils.refreshIcons) {
+            CommonUtils.refreshIcons();
+        } else if (window.lucide && typeof window.lucide.createIcons === 'function') {
+            window.lucide.createIcons();
+        }
+    }
+
+    _hasPagePermission(permission) {
+        if (!window.PAGE_AUTH || typeof window.PAGE_AUTH !== 'object') {
+            return false;
+        }
+        return window.PAGE_AUTH[permission] === true;
+    }
+
+    hasPagePermission(permission) {
+        return this._hasPagePermission(permission);
+    }
+
+    _getFrameworkModal(modal) {
+        if (!modal) return null;
+        if (window.coreui && window.coreui.Modal) {
+            return window.coreui.Modal.getOrCreateInstance(modal);
+        }
+        if (window.bootstrap && window.bootstrap.Modal) {
+            return window.bootstrap.Modal.getOrCreateInstance(modal);
+        }
+        return null;
+    }
+
+    _showModalElement(modal) {
+        const instance = this._getFrameworkModal(modal);
+        if (instance) {
+            instance.show();
+            return;
+        }
+        modal.style.display = 'block';
+        modal.removeAttribute('aria-hidden');
+        modal.setAttribute('aria-modal', 'true');
+        modal.classList.add('show');
+        document.body.classList.add('modal-open');
+    }
+
+    _hideModalElement(modal) {
+        if (!modal) return;
+        const instance = this._getFrameworkModal(modal);
+        if (instance) {
+            instance.hide();
+            return;
+        }
+        modal.classList.remove('show');
+        modal.setAttribute('aria-hidden', 'true');
+        modal.removeAttribute('aria-modal');
+        modal.style.display = 'none';
+        document.body.classList.remove('modal-open');
     }
 
     /**
@@ -200,23 +501,7 @@ class TuiPageBuilder {
         this.currentPage = page; // 현재 페이지 상태 업데이트
         
         // 1. GET 요청 파라미터 조합 (URLSearchParams 활용)
-        const params = new URLSearchParams();
-        params.append('page', this.currentPage);
-        params.append('size', this.currentSize);
-        
-        // 사용자가 config에 등록한 searchInputs 배열을 순회하며 검색 조건 값을 추출해 파라미터에 추가합니다.
-        this.config.searchInputs.forEach(id => {
-            const el = document.getElementById(id);
-            if (!el) return;
-            let value = el.value;
-            // 날짜 전송 형식 규약: date -> YYYYMMDD, datetime-local -> YYYYMMDDHHmm (screen-convention.md)
-            if (el.type === 'date') {
-                value = value ? dayjs(value).format('YYYYMMDD') : '';
-            } else if (el.type === 'datetime-local') {
-                value = value ? dayjs(value).format('YYYYMMDDHHmm') : '';
-            }
-            params.append(id, value);
-        });
+        const params = this.getSearchParams({ includePaging: true });
 
         // 2. 서버 연동 — HTTP 호출은 axios로 통일한다 (screen-convention.md)
         //    전역 인터셉터가 스피너, ApiResponse 언래핑, 오류 모달을 담당한다.
@@ -232,8 +517,14 @@ class TuiPageBuilder {
                 return;
             }
 
-            const contents = page.contents || [];
-            this.grid.resetData(contents);
+            const contents = this._withRowNo(page.contents || [], page.page || this.currentPage, page.size || this.currentSize);
+            this.grid.resetData(contents, {
+                pageState: {
+                    page: page.page || this.currentPage,
+                    totalCount: page.totalCount || contents.length,
+                    perPage: page.size || this.currentSize
+                }
+            });
 
             // 데이터가 0건일 때 토스트 알림
             if (contents.length === 0 && typeof CommonUtils !== 'undefined') {
@@ -273,6 +564,16 @@ class TuiPageBuilder {
             btnSearch.addEventListener('click', () => this.searchData(1));
         }
 
+        const btnCreate = document.getElementById(this.config.btnCreate);
+        if (btnCreate) {
+            const actions = this.config.modalActions || {};
+            const canCreate = !!actions.createUrl && this._hasPagePermission('create');
+            btnCreate.classList.toggle('d-none', !canCreate);
+            if (canCreate) {
+                btnCreate.addEventListener('click', () => this._showCreateModal());
+            }
+        }
+
         // 2. 초기화 버튼 바인딩
         const btnReset = document.getElementById(this.config.btnReset);
         if (btnReset) {
@@ -282,12 +583,17 @@ class TuiPageBuilder {
                     const el = document.getElementById(id);
                     if (el && el.tagName !== 'SELECT') el.value = '';
                     if (el && el.tagName === 'SELECT') el.selectedIndex = 0;
+                    document.querySelectorAll(`input[name="${id}"]`).forEach((radio, index) => {
+                        radio.checked = index === 0;
+                    });
                 });
+                this._applySearchDefaults(true);
                 
                 // 만약 화면 특화 초기화 로직이 있다면 추가 실행
                 if (typeof CommonUtils !== 'undefined' && typeof CommonUtils.resetFields === 'function') {
                     CommonUtils.resetFields();
                 }
+                this._syncSearchDatePickers();
                 
                 // 초기화 후 1페이지 재조회
                 this.searchData(1);
@@ -342,4 +648,163 @@ class TuiPageBuilder {
      * @returns {number} 현재 페이지 번호
      */
     getCurrentPage() { return this.currentPage; }
+
+    getSearchParams(options = {}) {
+        const opts = Object.assign({ includePaging: false }, options);
+        const params = new URLSearchParams();
+        if (opts.includePaging) {
+            params.append('page', this.currentPage);
+            params.append('size', this.currentSize);
+        }
+        this.config.searchInputs.forEach(id => {
+            params.append(id, this._readSearchValue(id));
+        });
+        return params;
+    }
+
+    _isRowNumHeader(rowHeader) {
+        return rowHeader === 'rowNum' || (rowHeader && rowHeader.type === 'rowNum');
+    }
+
+    _rowNoColumn() {
+        return {
+            header: 'No.',
+            name: 'rowNo',
+            align: 'center',
+            width: 60,
+            sortable: false,
+            formatter: ({ value }) => value || '-'
+        };
+    }
+
+    _withRowNo(contents, page, size) {
+        if (!this.usesOffsetRowNo) {
+            return contents;
+        }
+        const offset = (Number(page || 1) - 1) * Number(size || this.currentSize || 10);
+        return contents.map((row, index) => Object.assign({}, row, { rowNo: offset + index + 1 }));
+    }
+
+    _initSearchDatePickers() {
+        if (!window.tui || !window.tui.DatePicker) {
+            return;
+        }
+        this._datePickerInputIds().forEach(id => {
+            const input = document.getElementById(id);
+            const layer = document.getElementById(`${id}PickerLayer`);
+            if (!input || !layer) {
+                return;
+            }
+            this.searchDatePickers[id] = new tui.DatePicker(layer, {
+                language: 'ko',
+                date: this._toDatePickerDate(input.value),
+                input: { element: input, format: 'yyyy-MM-dd' },
+                calendar: { showToday: true }
+            });
+        });
+    }
+
+    _datePickerInputIds() {
+        const configured = Array.isArray(this.config.datePickerInputs) ? this.config.datePickerInputs : [];
+        const source = configured.length > 0 ? configured : this.config.searchInputs;
+        return source.filter((id, index, ids) =>
+            ids.indexOf(id) === index && this._isDateSearchInput(id)
+        );
+    }
+
+    _isDateSearchInput(id) {
+        const el = document.getElementById(id);
+        return !!(el && (el.type === 'date' || el.dataset.searchType === 'date'));
+    }
+
+    _toDatePickerDate(value) {
+        if (!value || typeof dayjs === 'undefined') {
+            return null;
+        }
+        const parsed = dayjs(value);
+        return parsed.isValid() ? parsed.toDate() : null;
+    }
+
+    _syncSearchDatePickers() {
+        Object.keys(this.searchDatePickers || {}).forEach(id => {
+            const picker = this.searchDatePickers[id];
+            const input = document.getElementById(id);
+            const date = this._toDatePickerDate(input ? input.value : '');
+            if (date) {
+                picker.setDate(date, true);
+            } else if (picker && typeof picker.setNull === 'function') {
+                picker.setNull();
+            }
+        });
+    }
+
+    _readSearchValue(id) {
+        const el = document.getElementById(id);
+        if (el && el.value !== undefined) {
+            let value = el.value;
+            if (el.type === 'date' || el.dataset.searchType === 'date') {
+                value = value ? dayjs(value).format('YYYYMMDD') : '';
+            } else if (el.type === 'datetime-local') {
+                value = value ? dayjs(value).format('YYYYMMDDHHmm') : '';
+            }
+            return value;
+        }
+        const checked = document.querySelector(`input[name="${id}"]:checked`);
+        return checked ? checked.value : '';
+    }
+
+    _applySearchDefaults(forceReset) {
+        if (!this.config.searchDefaults) {
+            return;
+        }
+        Object.keys(this.config.searchDefaults).forEach(id => {
+            const defaultCode = this.config.searchDefaults[id];
+            if (!defaultCode || defaultCode === 'NONE') {
+                return;
+            }
+            const el = document.getElementById(id);
+            const defaultValue = this._resolveDefaultValue(id, defaultCode);
+            if (el && (forceReset || !el.value)) {
+                if (el.tagName === 'SELECT') {
+                    el.value = defaultValue;
+                } else {
+                    el.value = defaultValue;
+                }
+            }
+            const radios = document.querySelectorAll(`input[name="${id}"]`);
+            if (radios.length > 0) {
+                radios.forEach(radio => {
+                    radio.checked = radio.value === defaultValue;
+                });
+            }
+        });
+    }
+
+    _resolveDefaultValue(id, defaultCode) {
+        if (typeof dayjs === 'undefined') {
+            return '';
+        }
+        const today = dayjs();
+        switch (defaultCode) {
+            case 'TODAY':
+                return today.format('YYYY-MM-DD');
+            case 'YESTERDAY':
+                return today.subtract(1, 'day').format('YYYY-MM-DD');
+            case 'RECENT_7_DAYS':
+                return this._isRangeEnd(id)
+                    ? today.format('YYYY-MM-DD')
+                    : today.subtract(6, 'day').format('YYYY-MM-DD');
+            case 'THIS_MONTH':
+            case 'CURRENT_MONTH_TO_TODAY':
+                return this._isRangeEnd(id)
+                    ? today.format('YYYY-MM-DD')
+                    : today.startOf('month').format('YYYY-MM-DD');
+            default:
+                return defaultCode;
+        }
+    }
+
+    _isRangeEnd(id) {
+        return id.endsWith('To') || id.startsWith('end') || id.startsWith('to');
+    }
 }

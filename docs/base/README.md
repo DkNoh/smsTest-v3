@@ -38,6 +38,7 @@ v3는 화면을 먼저 많이 만드는 프로젝트가 아니다. 먼저 폐쇄
 | `common-utils-implementation.md` | @PrivacyLog/MaskingUtil/ExcelUtil 구현 기록 |
 | `common-code-api-implementation.md` | 화면 콤보/자동완성용 공통코드 API 구현 기록 |
 | `query-scaffold-implementation.md` | Query Scaffold(local 전용 화면 생성 도구) 구현 기록 |
+| `remaining-work.md` | 현재 미수정/미비 사항과 의도적으로 미룬 작업 목록 |
 | `deployment-checklist.md` | 폐쇄망 반입 체크리스트 (환경변수/DDL/소스 전환/검증) |
 | `test-automation-guide.md` | 테스트 자동화 3층 구조 (scaffold 생성/컨벤션/Jenkins) |
 

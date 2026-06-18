@@ -2,8 +2,8 @@ spring:
   datasource:
     driver-class-name: oracle.jdbc.OracleDriver
     url: ${SMS_DB_URL:jdbc:oracle:thin:@localhost:1521/SMS}
-    username: ${SMS_DB_USERNAME:SYSTEM}
-    password: ${SMS_DB_PASSWORD}
+    username: ${SMS_DB_USERNAME:SMS}
+    password: ${SMS_DB_PASSWORD:1234}
 
 sms:
   auth:
@@ -11,8 +11,8 @@ sms:
   menu:
     source: static
     auth:
-      # scaffold 생성기는 local 전용 개발 도구라 메뉴에 등록하지 않는다
-      exclude-paths: /system/scaffold,/system/scaffold/**
+      # local 전용 개발/확인 도구는 DB 메뉴 등록 전에도 접근할 수 있게 연다
+      exclude-paths: /system/scaffold,/system/scaffold/**,/system/menu-tree,/system/menu-tree/**
   role:
     source: static
     static-default: ROLE_ADMIN

@@ -5,8 +5,9 @@
 
 <mapper namespace="com.example.sms.mapper.sms.SmsHistoryMapper">
 
-    <!-- 화면 date input 값은 YYYYMMDD 문자열로 전달된다 (TuiPageBuilder 규약).
-         비교 컬럼이 DATE/TIMESTAMP면 TO_DATE(#{변수}, 'YYYYMMDD')로 감싸서 비교한다. -->
+    <!-- 화면 DatePicker 검색값은 YYYYMMDD 문자열로 전달된다 (TuiPageBuilder 규약).
+         비교 컬럼이 DATE/TIMESTAMP면 TO_DATE/TO_TIMESTAMP로 감싸고,
+         단일 날짜 = 조건은 당일 00:00:00 이상, 다음날 00:00:00 미만 범위로 변환한다. -->
 
     <sql id="searchConditions">
         <where>
@@ -15,13 +16,29 @@
 
     <select id="count" resultType="int">
         SELECT COUNT(1) FROM (
-            SELECT 	A.SENT_AT
-            		, A.RECEIVER_NO
-            		, A.SEND_TYPE		
+            SELECT
+                A.SMS_HISTORY_ID AS SMS_HISTORY_ID,
+                A.REQUEST_ID AS REQUEST_ID,
+                A.SENT_AT AS SENT_AT,
+                A.RECEIVER_NO AS RECEIVER_NO,
+                A.SENDER_NO AS SENDER_NO,
+                A.SEND_TYPE AS SEND_TYPE,
+                A.SEND_STATUS AS SEND_STATUS,
+                A.RESULT_CD AS RESULT_CD,
+                A.RESULT_MSG AS RESULT_MSG
             FROM SMS.SMS_HISTORY A
             WHERE 1=1
-                <if test="startDt != null and startDt != ''">
-                    AND   A.SENT_AT >= #{startDt}
+                <if test="sendType != null and sendType != ''">
+                    AND A.SEND_TYPE = #{sendType}
+                </if>
+                <if test="sendStatus != null and sendStatus != ''">
+                    AND A.SEND_STATUS = #{sendStatus}
+                </if>
+                <if test="sentAt != null and sentAt != ''">
+                    AND a.sent_at <![CDATA[ >= ]]> TO_TIMESTAMP(#{sentAt} || '000000', 'YYYYMMDDHH24MISS') AND a.sent_at <![CDATA[ < ]]> TO_TIMESTAMP(#{sentAt} || '000000', 'YYYYMMDDHH24MISS') + INTERVAL '1' DAY
+                </if>
+                <if test="receiverNo != null and receiverNo != ''">
+                    AND A.RECEIVER_NO LIKE '%' || #{receiverNo} || '%'
                 </if>
         ) A
         <include refid="searchConditions"/>
@@ -30,17 +47,33 @@
     <select id="selectList" resultType="com.example.sms.vo.sms.SmsHistoryVO">
         SELECT A.*
         FROM (
-            SELECT 	A.SENT_AT
-            		, A.RECEIVER_NO
-            		, A.SEND_TYPE		
+            SELECT
+                A.SMS_HISTORY_ID AS SMS_HISTORY_ID,
+                A.REQUEST_ID AS REQUEST_ID,
+                A.SENT_AT AS SENT_AT,
+                A.RECEIVER_NO AS RECEIVER_NO,
+                A.SENDER_NO AS SENDER_NO,
+                A.SEND_TYPE AS SEND_TYPE,
+                A.SEND_STATUS AS SEND_STATUS,
+                A.RESULT_CD AS RESULT_CD,
+                A.RESULT_MSG AS RESULT_MSG
             FROM SMS.SMS_HISTORY A
             WHERE 1=1
-                <if test="startDt != null and startDt != ''">
-                    AND   A.SENT_AT >= #{startDt}
+                <if test="sendType != null and sendType != ''">
+                    AND A.SEND_TYPE = #{sendType}
+                </if>
+                <if test="sendStatus != null and sendStatus != ''">
+                    AND A.SEND_STATUS = #{sendStatus}
+                </if>
+                <if test="sentAt != null and sentAt != ''">
+                    AND a.sent_at <![CDATA[ >= ]]> TO_TIMESTAMP(#{sentAt} || '000000', 'YYYYMMDDHH24MISS') AND a.sent_at <![CDATA[ < ]]> TO_TIMESTAMP(#{sentAt} || '000000', 'YYYYMMDDHH24MISS') + INTERVAL '1' DAY
+                </if>
+                <if test="receiverNo != null and receiverNo != ''">
+                    AND A.RECEIVER_NO LIKE '%' || #{receiverNo} || '%'
                 </if>
         ) A
         <include refid="searchConditions"/>
-        ORDER BY a.sent_at
+        ORDER BY A.SENT_AT DESC, A.SMS_HISTORY_ID DESC
         OFFSET #{offset} ROWS FETCH NEXT #{size} ROWS ONLY
     </select>
 
@@ -52,30 +85,20 @@
          갱신값은 컬럼 타입 확인 후 선택한다: TIMESTAMP -> SYSTIMESTAMP, CHAR(14) -> TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS') -->
     <update id="update">
         UPDATE /* TODO: 테이블명 */
-           SET /* TODO: 수정 컬럼 = #{필드}, */
-               UPD_DTTM = SYSTIMESTAMP
-         WHERE ID = #{id}
-           AND UPD_DTTM = #{beforeUpdateDttm}
+           SET SENT_AT = #{sentAt},
+               RECEIVER_NO = #{receiverNo},
+               SENDER_NO = #{senderNo},
+               SEND_TYPE = #{sendType},
+               SEND_STATUS = #{sendStatus},
+               RESULT_CD = #{resultCd},
+               RESULT_MSG = #{resultMsg},
+               SMS_HISTORY_ID = SYSTIMESTAMP
+         WHERE SMS_HISTORY_ID = #{smsHistoryId}
+           AND SMS_HISTORY_ID = #{beforeSmsHistoryId}
     </update>
 
     <delete id="delete">
-        DELETE FROM /* TODO: 테이블명 */ WHERE ID = #{id}
+        DELETE FROM /* TODO: 테이블명 */ WHERE SMS_HISTORY_ID = #{smsHistoryId}
     </delete>
-
-    <select id="selectListForExcel" resultType="java.util.HashMap">
-        SELECT A.*
-        FROM (
-            SELECT 	A.SENT_AT
-            		, A.RECEIVER_NO
-            		, A.SEND_TYPE		
-            FROM SMS.SMS_HISTORY A
-            WHERE 1=1
-                <if test="startDt != null and startDt != ''">
-                    AND   A.SENT_AT >= #{startDt}
-                </if>
-        ) A
-        <include refid="searchConditions"/>
-        ORDER BY a.sent_at
-    </select>
 
 </mapper>

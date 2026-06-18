@@ -7,11 +7,7 @@ import com.example.sms.exception.CustomException;
 import com.example.sms.exception.ErrorCode;
 import com.example.sms.mapper.sms.SmsHistoryMapper;
 import com.example.sms.vo.sms.SmsHistoryVO;
-import com.example.sms.util.ExcelUtil;
-import com.example.sms.util.MaskingUtil;
-import jakarta.servlet.http.HttpServletResponse;
 import java.util.List;
-import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,22 +41,7 @@ public class SmsHistoryService {
     }
 
     @Transactional
-    public void delete(String id) {
-        mapper.delete(id);
-    }
-
-    @Transactional(readOnly = true)
-    public void downloadExcel(SmsHistorySearchRequestDTO request, HttpServletResponse response) {
-        String[] headers = { "SENT_AT", "RECEIVER_NO", "SEND_TYPE" };
-        String[] keys = { "SENT_AT", "RECEIVER_NO", "SEND_TYPE" };
-        List<Map<String, Object>> list = mapper.selectListForExcel(request);
-        // 개인정보 컬럼은 마스킹 후 내보낸다. 원문 엑셀이 필요하면 MASK_VIEW 권한의 /unmask 경로로 분리한다.
-        for (Map<String, Object> row : list) {
-            Object receiverNo = row.get("RECEIVER_NO");
-            if (receiverNo != null) {
-                row.put("RECEIVER_NO", MaskingUtil.maskPhone(receiverNo.toString()));
-            }
-        }
-        ExcelUtil.downloadExcel(response, "SmsHistory_export", headers, list, keys);
+    public void delete(Integer smsHistoryId) {
+        mapper.delete(smsHistoryId);
     }
 }

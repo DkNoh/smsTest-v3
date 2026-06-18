@@ -72,14 +72,22 @@ public final class ServiceTestTemplate {
               .append("    @Test\n")
               .append("    void 삭제는_Mapper에_위임한다() {\n")
               .append("        // when\n")
-              .append("        service.delete(\"1\");\n\n")
+              .append("        service.delete(").append(samplePk(model)).append(");\n\n")
               .append("        // then\n")
-              .append("        then(mapper).should().delete(\"1\");\n")
+              .append("        then(mapper).should().delete(").append(samplePk(model)).append(");\n")
               .append("    }\n");
         }
 
         sb.append("\n    // TODO: 업무 규칙 테스트를 추가한다 (검증 조건, 상태 전이, 마스킹 등)\n")
           .append("}\n");
         return sb.toString();
+    }
+
+    private static String samplePk(ScaffoldModel model) {
+        return switch (model.pkJavaType()) {
+            case "Integer" -> "1";
+            case "Long" -> "1L";
+            default -> "\"1\"";
+        };
     }
 }

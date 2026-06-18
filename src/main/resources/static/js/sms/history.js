@@ -2,17 +2,29 @@ document.addEventListener('DOMContentLoaded', function () {
     const pageBuilder = new TuiPageBuilder({
         el: 'grid',
         apiUrl: '/sms/history/data',
-        searchInputs: ['startDt'],
+        searchInputs: ['sendType', 'sendStatus', 'sentAt', 'receiverNo'],
+        searchDefaults: {sentAt: 'RECENT_7_DAYS'},
         rowHeaders: ['rowNum'],
         columns: [
-            { header: 'SENT_AT', name: 'sentAt', align: 'center', width: 150, formatter: TuiCommon.fmt.date },
-            { header: 'RECEIVER_NO', name: 'receiverNo', align: 'center', width: 150 },
-            { header: 'SEND_TYPE', name: 'sendType', align: 'center', width: 150 }
-        ]
-    });
-
-    document.querySelector('#btn-excel')?.addEventListener('click', () => {
-        const qs = '?' + [`startDt=${document.querySelector('#startDt').value}`].join('&');
-        window.location.href = '/sms/history/excel' + qs;
+            { header: 'SMS_HISTORY_ID', name: 'smsHistoryId', align: 'center', width: 150 },
+            { header: 'REQUEST_ID', name: 'requestId', align: 'center', width: 150 },
+            { header: 'SENT_AT', name: 'sentAt', align: 'center', width: 150, editable: true, formatter: TuiCommon.fmt.date },
+            { header: 'RECEIVER_NO', name: 'receiverNo', align: 'center', width: 150, editable: true },
+            { header: 'SENDER_NO', name: 'senderNo', align: 'center', width: 150, editable: true },
+            { header: 'SEND_TYPE', name: 'sendType', align: 'center', width: 150, editable: true },
+            { header: 'SEND_STATUS', name: 'sendStatus', align: 'center', width: 150, editable: true },
+            { header: 'RESULT_CD', name: 'resultCd', align: 'center', width: 150, editable: true },
+            { header: 'RESULT_MSG', name: 'resultMsg', align: 'center', width: 150, editable: true }
+        ],
+        autoModal: true,
+        autoModalTitle: '발송이력조회 상세',
+        modalActions: {
+            updateUrl: '/sms/history/update',
+            deleteUrl: '/sms/history/delete',
+            pkField: 'smsHistoryId',
+            lockField: 'smsHistoryId',
+            beforeLockField: 'beforeSmsHistoryId',
+            editable: true
+        }
     });
 });

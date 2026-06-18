@@ -9,9 +9,7 @@
             <button id="sidebarToggleBtn" type="button" title="사이드바 접기/펼치기"
                     class="btn btn-link p-0 me-3 text-secondary d-flex align-items-center"
                     style="text-decoration:none; box-shadow:none;">
-                <svg id="toggleIcon" viewBox="0 0 24 24" fill="currentColor" style="width:20px;height:20px;">
-                    <path id="toggleIconPath" d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
-                </svg>
+                <i id="toggleIcon" data-lucide="panel-left-close" class="layout-icon"></i>
             </button>
 
             <!-- 현재 페이지 타이틀 렌더링 -->
@@ -31,9 +29,7 @@
                 <li class="nav-item">
                     <form th:action="@{/logout}" method="post" class="m-0 d-flex align-items-center">
                         <button type="submit" class="btn btn-link nav-link px-0 text-secondary" title="로그아웃" style="text-decoration: none;">
-                            <svg class="icon" viewBox="0 0 24 24" fill="currentColor" style="width: 20px; height: 20px;">
-                                <path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-2.58 2.58L17 17l5-5zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/>
-                            </svg>
+                            <i data-lucide="log-out" class="layout-icon"></i>
                         </button>
                     </form>
                 </li>

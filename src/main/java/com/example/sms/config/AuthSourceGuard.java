@@ -23,9 +23,17 @@ public class AuthSourceGuard {
 
     public AuthSourceGuard(Environment environment,
                            @Value("${sms.menu.source:db}") String menuSource,
-                           @Value("${sms.role.source:db}") String roleSource) {
+                           @Value("${sms.role.source:db}") String roleSource,
+                           @Value("${sms.auth.mode:ldap}") String authMode) {
         List<String> activeProfiles = Arrays.asList(environment.getActiveProfiles());
+        boolean local = activeProfiles.contains("local");
         boolean prod = activeProfiles.contains("prod");
+
+        if (!local && "local".equalsIgnoreCase(authMode)) {
+            throw new IllegalStateException(
+                "sms.auth.mode=local은 spring profile local에서만 허용한다. "
+                    + "activeProfiles=" + activeProfiles);
+        }
 
         if (prod && (!DB.equals(menuSource) || !DB.equals(roleSource))) {
             throw new IllegalStateException(

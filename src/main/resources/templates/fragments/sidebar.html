@@ -29,39 +29,25 @@
                         <th:block th:switch="${parentMenu.menuNm}">
 
                             <!-- 기본메뉴 : 홈 아이콘 -->
-                            <svg th:case="'기본메뉴'" class="nav-icon flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
-                            </svg>
+                            <i th:case="'기본메뉴'" data-lucide="home" class="nav-icon flex-shrink-0"></i>
 
                             <!-- SMS발송조회 : 메시지 검색 아이콘 -->
-                            <svg th:case="'SMS발송조회'" class="nav-icon flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12zm-3-5h-4v2h4v-2zm-6 0H7v2h4v-2zm6-4H7v2h10V7z"/>
-                            </svg>
+                            <i th:case="'SMS발송조회'" data-lucide="message-square-search" class="nav-icon flex-shrink-0"></i>
 
                             <!-- 캠페인SMS : 발송(종이비행기) 아이콘 -->
-                            <svg th:case="'캠페인SMS'" class="nav-icon flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-                            </svg>
+                            <i th:case="'캠페인SMS'" data-lucide="send" class="nav-icon flex-shrink-0"></i>
 
                             <!-- 시스템관리 : 설정 슬라이더(tune) 아이콘 -->
-                            <svg th:case="'시스템관리'" class="nav-icon flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M3 17v2h6v-2H3zM3 5v2h10V5H3zm10 16v-2h8v-2h-8v-2h-2v6h2zM7 9v2H3v2h4v2h2V9H7zm14 4v-2H11v2h10zm-6-4h2V7h4V5h-4V3h-2v6z"/>
-                            </svg>
+                            <i th:case="'시스템관리'" data-lucide="sliders-horizontal" class="nav-icon flex-shrink-0"></i>
 
                             <!-- 시스템관리 계정관리 : 다중 사용자(group) 아이콘 -->
-                            <svg th:case="'시스템관리 계정관리'" class="nav-icon flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
-                            </svg>
+                            <i th:case="'시스템관리 계정관리'" data-lucide="users" class="nav-icon flex-shrink-0"></i>
 
                             <!-- 통계 관리 : 꺾은선+막대 혼합(insights) 아이콘 -->
-                            <svg th:case="'통계 관리'" class="nav-icon flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M21 8c-1.45 0-2.26 1.44-1.93 2.51l-3.55 3.56c-.3-.09-.74-.09-1.04 0l-2.55-2.55C12.26 10.44 11.45 9 10 9c-1.45 0-2.26 1.46-1.93 2.53L4.51 15.1C3.44 14.74 2 15.55 2 17c0 1.1.9 2 2 2 1.45 0 2.26-1.44 1.93-2.51l3.55-3.56c.3.09.74.09 1.04 0l2.55 2.55C12.74 16.56 13.55 18 15 18c1.45 0 2.26-1.46 1.93-2.53l3.56-3.57C21.56 12.26 23 11.45 23 10c0-1.1-.9-2-2-2z"/>
-                            </svg>
+                            <i th:case="'통계 관리'" data-lucide="chart-no-axes-combined" class="nav-icon flex-shrink-0"></i>
 
                             <!-- 기본 fallback 아이콘 -->
-                            <svg th:case="*" class="nav-icon flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z"/>
-                            </svg>
+                            <i th:case="*" data-lucide="list" class="nav-icon flex-shrink-0"></i>
                         </th:block>
                         <span th:text="${parentMenu.menuNm}" class="text-truncate">메뉴 그룹</span>
                     </a>

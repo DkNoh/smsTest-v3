@@ -6,7 +6,6 @@ import com.example.sms.dto.sms.SmsHistorySearchRequestDTO;
 import com.example.sms.dto.sms.SmsHistoryUpdateRequestDTO;
 import com.example.sms.service.sms.SmsHistoryService;
 import com.example.sms.vo.sms.SmsHistoryVO;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -54,14 +53,8 @@ public class SmsHistoryController {
 
     @ResponseBody
     @PostMapping("/delete")
-    public ResponseEntity<ApiResponse<String>> delete(@RequestParam String id) {
-        service.delete(id);
+    public ResponseEntity<ApiResponse<String>> delete(@RequestParam Integer smsHistoryId) {
+        service.delete(smsHistoryId);
         return ResponseEntity.ok(ApiResponse.success("삭제되었습니다.", null));
-    }
-
-    @GetMapping("/excel")
-    public void downloadExcel(@ModelAttribute SmsHistorySearchRequestDTO request,
-            HttpServletResponse response) {
-        service.downloadExcel(request, response);
     }
 }

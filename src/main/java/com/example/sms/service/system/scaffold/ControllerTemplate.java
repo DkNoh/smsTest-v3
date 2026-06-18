@@ -81,8 +81,9 @@ public final class ControllerTemplate {
               .append("    }\n\n")
               .append("    @ResponseBody\n")
               .append("    @PostMapping(\"/delete\")\n")
-              .append("    public ResponseEntity<ApiResponse<String>> delete(@RequestParam String id) {\n")
-              .append("        service.delete(id);\n")
+              .append("    public ResponseEntity<ApiResponse<String>> delete(@RequestParam ")
+              .append(model.pkJavaType()).append(" ").append(model.pkFieldName()).append(") {\n")
+              .append("        service.delete(").append(model.pkFieldName()).append(");\n")
               .append("        return ResponseEntity.ok(ApiResponse.success(\"삭제되었습니다.\", null));\n")
               .append("    }\n");
         }

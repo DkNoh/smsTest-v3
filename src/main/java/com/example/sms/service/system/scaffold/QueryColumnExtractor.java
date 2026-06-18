@@ -6,6 +6,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import net.sf.jsqlparser.parser.CCJSqlParserUtil;
 import net.sf.jsqlparser.schema.Column;
+import net.sf.jsqlparser.schema.Table;
 import net.sf.jsqlparser.statement.select.PlainSelect;
 import net.sf.jsqlparser.statement.select.Select;
 import net.sf.jsqlparser.statement.select.SelectItem;
@@ -19,6 +20,9 @@ public final class QueryColumnExtractor {
     private static final Pattern SEARCH_VAR_PATTERN = Pattern.compile("\\$([a-zA-Z0-9_]+)");
     private static final Pattern SELECT_PART_PATTERN =
         Pattern.compile("SELECT(.*?)\\s+FROM\\s", Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+    private static final Pattern FROM_TABLE_PATTERN =
+        Pattern.compile("\\bFROM\\s+((?:\"?[A-Za-z][A-Za-z0-9_]*\"?\\.)?\"?[A-Za-z][A-Za-z0-9_]*\"?)\\b",
+            Pattern.CASE_INSENSITIVE);
 
     private QueryColumnExtractor() {
     }
@@ -29,10 +33,7 @@ public final class QueryColumnExtractor {
             return new ArrayList<>();
         }
 
-        String safeQuery = query
-            .replaceAll("#\\{[^}]+\\}", "NULL")
-            .replaceAll("\\$\\{[^}]+\\}", "NULL")
-            .replaceAll("\\$([a-zA-Z0-9_]+)", "NULL");
+        String safeQuery = safeParseQuery(query);
 
         try {
             net.sf.jsqlparser.statement.Statement stmt = CCJSqlParserUtil.parse(safeQuery);
@@ -60,6 +61,31 @@ public final class QueryColumnExtractor {
         } catch (Exception e) {
             return extractColumnsFallback(query);
         }
+    }
+
+    /** CRUD 기준 테이블을 추출한다. 조인/서브쿼리 화면은 화면에서 targetTable로 명시한다. */
+    public static String extractPrimaryTable(String query) {
+        if (query == null || query.trim().isEmpty()) {
+            return "";
+        }
+
+        try {
+            net.sf.jsqlparser.statement.Statement stmt = CCJSqlParserUtil.parse(safeParseQuery(query));
+            if (stmt instanceof Select select && select.getPlainSelect() != null) {
+                PlainSelect plainSelect = select.getPlainSelect();
+                if (plainSelect.getFromItem() instanceof Table table) {
+                    return normalizeIdentifier(table.getFullyQualifiedName());
+                }
+            }
+        } catch (Exception ignored) {
+            // fallback below
+        }
+
+        Matcher matcher = FROM_TABLE_PATTERN.matcher(query);
+        if (matcher.find()) {
+            return normalizeIdentifier(matcher.group(1));
+        }
+        return "";
     }
 
     /** $변수를 camelCase로 추출한다. $base_dt -> baseDt */
@@ -133,7 +159,7 @@ public final class QueryColumnExtractor {
         if (!matcher.find()) {
             return columns;
         }
-        for (String part : matcher.group(1).split(",")) {
+        for (String part : splitTopLevel(matcher.group(1))) {
             part = part.trim();
             if (part.isEmpty()) {
                 continue;
@@ -146,6 +172,46 @@ public final class QueryColumnExtractor {
             columns.add(colName);
         }
         return columns;
+    }
+
+    private static String safeParseQuery(String query) {
+        return query
+            .replaceAll("#\\{[^}]+\\}", "NULL")
+            .replaceAll("\\$\\{[^}]+\\}", "NULL")
+            .replaceAll("\\$([a-zA-Z0-9_]+)", "NULL");
+    }
+
+    private static String normalizeIdentifier(String value) {
+        return value == null ? "" : value.replace("\"", "").trim().toUpperCase();
+    }
+
+    private static List<String> splitTopLevel(String text) {
+        List<String> parts = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
+        int depth = 0;
+        boolean inSingleQuote = false;
+        boolean inDoubleQuote = false;
+        for (int i = 0; i < text.length(); i++) {
+            char ch = text.charAt(i);
+            if (ch == '\'' && !inDoubleQuote) {
+                inSingleQuote = !inSingleQuote;
+            } else if (ch == '"' && !inSingleQuote) {
+                inDoubleQuote = !inDoubleQuote;
+            } else if (!inSingleQuote && !inDoubleQuote) {
+                if (ch == '(') {
+                    depth++;
+                } else if (ch == ')' && depth > 0) {
+                    depth--;
+                } else if (ch == ',' && depth == 0) {
+                    parts.add(current.toString());
+                    current.setLength(0);
+                    continue;
+                }
+            }
+            current.append(ch);
+        }
+        parts.add(current.toString());
+        return parts;
     }
 
     private static String lastIdentifier(String expression) {

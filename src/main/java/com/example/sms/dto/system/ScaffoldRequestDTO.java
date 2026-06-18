@@ -1,6 +1,9 @@
 package com.example.sms.dto.system;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Pattern;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Query Scaffold 생성 요청 (QuerySpec).
@@ -9,12 +12,15 @@ import jakarta.validation.constraints.NotBlank;
 public class ScaffoldRequestDTO {
 
     @NotBlank(message = "moduleName은 필수입니다.")
+    @Pattern(regexp = "^[a-z][a-z0-9]*$", message = "moduleName은 영문 소문자와 숫자만 사용할 수 있습니다.")
     private String moduleName;
 
     @NotBlank(message = "domainId는 필수입니다.")
+    @Pattern(regexp = "^[a-z][a-z0-9-]*$", message = "domainId는 영문 소문자, 숫자, 하이픈만 사용할 수 있습니다.")
     private String domainId;
 
     @NotBlank(message = "domainClass는 필수입니다.")
+    @Pattern(regexp = "^[A-Z][A-Za-z0-9]*$", message = "domainClass는 영문 대문자로 시작하는 Java 클래스명이어야 합니다.")
     private String domainClass;
 
     @NotBlank(message = "domainName은 필수입니다.")
@@ -28,7 +34,15 @@ public class ScaffoldRequestDTO {
 
     private boolean includeCreateUpdate;
     private boolean includeExcel;
+    private boolean includeModal;
     private boolean includePrivacy;
+    private String screenMode;
+    private String targetTable;
+    private String pkColumn;
+    private String lockColumn;
+    private List<ScaffoldSearchParamOptionDTO> searchParamOptions = new ArrayList<>();
+    private List<ScaffoldColumnOptionDTO> columnOptions = new ArrayList<>();
+    private ScaffoldMenuOptionDTO menuOption = new ScaffoldMenuOptionDTO();
 
     public String getModuleName() {
         return moduleName;
@@ -94,11 +108,75 @@ public class ScaffoldRequestDTO {
         this.includeExcel = includeExcel;
     }
 
+    public boolean isIncludeModal() {
+        return includeModal;
+    }
+
+    public void setIncludeModal(boolean includeModal) {
+        this.includeModal = includeModal;
+    }
+
     public boolean isIncludePrivacy() {
         return includePrivacy;
     }
 
     public void setIncludePrivacy(boolean includePrivacy) {
         this.includePrivacy = includePrivacy;
+    }
+
+    public String getScreenMode() {
+        return screenMode;
+    }
+
+    public void setScreenMode(String screenMode) {
+        this.screenMode = screenMode;
+    }
+
+    public String getTargetTable() {
+        return targetTable;
+    }
+
+    public void setTargetTable(String targetTable) {
+        this.targetTable = targetTable;
+    }
+
+    public String getPkColumn() {
+        return pkColumn;
+    }
+
+    public void setPkColumn(String pkColumn) {
+        this.pkColumn = pkColumn;
+    }
+
+    public String getLockColumn() {
+        return lockColumn;
+    }
+
+    public void setLockColumn(String lockColumn) {
+        this.lockColumn = lockColumn;
+    }
+
+    public List<ScaffoldSearchParamOptionDTO> getSearchParamOptions() {
+        return searchParamOptions;
+    }
+
+    public void setSearchParamOptions(List<ScaffoldSearchParamOptionDTO> searchParamOptions) {
+        this.searchParamOptions = searchParamOptions != null ? searchParamOptions : new ArrayList<>();
+    }
+
+    public List<ScaffoldColumnOptionDTO> getColumnOptions() {
+        return columnOptions;
+    }
+
+    public void setColumnOptions(List<ScaffoldColumnOptionDTO> columnOptions) {
+        this.columnOptions = columnOptions != null ? columnOptions : new ArrayList<>();
+    }
+
+    public ScaffoldMenuOptionDTO getMenuOption() {
+        return menuOption;
+    }
+
+    public void setMenuOption(ScaffoldMenuOptionDTO menuOption) {
+        this.menuOption = menuOption != null ? menuOption : new ScaffoldMenuOptionDTO();
     }
 }

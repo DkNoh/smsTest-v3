@@ -11,13 +11,17 @@ import lombok.Data;
 @Data
 public class SmsHistoryUpdateRequestDTO {
 
-    // TODO: PK 필드 (WHERE 조건). 실제 PK 컬럼명으로 교체한다
-    private String id;
+    /** PK 필드 (WHERE 조건): SMS_HISTORY_ID */
+    private Integer smsHistoryId;
 
     private LocalDateTime sentAt;
     private String receiverNo;
+    private String senderNo;
     private String sendType;
+    private String sendStatus;
+    private String resultCd;
+    private String resultMsg;
 
-    /** 낙관적 잠금용. 조회 시점의 UPDATE_DTTM (hidden으로 받는다) */
-    private String beforeUpdateDttm;
+    /** 낙관적 잠금용. 조회 시점의 SMS_HISTORY_ID (hidden으로 받는다) */
+    private String beforeSmsHistoryId;
 }

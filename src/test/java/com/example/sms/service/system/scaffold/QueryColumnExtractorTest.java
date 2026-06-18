@@ -26,6 +26,32 @@ class QueryColumnExtractorTest {
     }
 
     @Test
+    void 함수와_서브쿼리_컬럼도_서버_파서로_alias를_추출한다() {
+        // given
+        String query = """
+            SELECT A.SEND_DT,
+                   NVL(A.RESULT_MSG, 'OK,FAIL') AS RESULT_MSG,
+                   (SELECT COUNT(1) FROM SMS.SMS_HISTORY X WHERE X.REQUEST_ID = A.REQUEST_ID) AS RETRY_CNT
+            FROM SMS.SMS_HISTORY A
+            WHERE A.SEND_DT >= $start_dt
+            """;
+
+        // when
+        List<String> columns = QueryColumnExtractor.extractColumns(query);
+
+        // then
+        assertThat(columns).containsExactly("SEND_DT", "RESULT_MSG", "RETRY_CNT");
+    }
+
+    @Test
+    void CRUD_기준_테이블을_FROM에서_추출한다() {
+        assertThat(QueryColumnExtractor.extractPrimaryTable("SELECT A.ID FROM SMS.SMS_HISTORY A"))
+            .isEqualTo("SMS.SMS_HISTORY");
+        assertThat(QueryColumnExtractor.extractPrimaryTable("SELECT A.ID FROM SMS_HISTORY A"))
+            .isEqualTo("SMS_HISTORY");
+    }
+
+    @Test
     void 검색변수를_camelCase로_추출한다() {
         // when
         List<String> vars = QueryColumnExtractor.extractSearchVars(QUERY);

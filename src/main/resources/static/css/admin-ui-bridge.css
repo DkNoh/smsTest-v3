@@ -1,0 +1,339 @@
+/* Icon alignment only; CoreUI owns button styles. */
+.lucide {
+    width: 1rem;
+    height: 1rem;
+    flex-shrink: 0;
+    stroke-width: 2;
+}
+
+.btn .lucide {
+    width: .95rem;
+    height: .95rem;
+    margin-right: .35rem;
+}
+
+.btn-icon .lucide {
+    margin-right: 0;
+}
+
+.layout-icon {
+    width: 20px;
+    height: 20px;
+}
+
+.nav-icon.lucide {
+    width: 1.1rem;
+    height: 1.1rem;
+    margin-right: .75rem;
+}
+
+.toast-icon {
+    width: 1rem;
+    height: 1rem;
+    margin-right: .35rem;
+}
+
+/* TUI Grid bridge */
+.tui-grid-container {
+    border-color: var(--cui-border-color) !important;
+    font-family: inherit !important;
+}
+
+.tui-grid-header-area {
+    background-color: var(--cui-tertiary-bg) !important;
+    border-color: var(--cui-border-color) !important;
+}
+
+.tui-grid-cell-header {
+    background-color: transparent !important;
+    border-left: none !important;
+    border-right: none !important;
+    font-weight: 600 !important;
+    color: var(--cui-body-color) !important;
+}
+
+.tui-grid-cell {
+    border-left: none !important;
+    border-right: none !important;
+    border-bottom: 1px solid var(--cui-border-color) !important;
+    color: var(--cui-body-color) !important;
+    font-size: .85rem;
+}
+
+.tui-grid-row-odd .tui-grid-cell {
+    background-color: var(--cui-light-bg-subtle) !important;
+}
+
+.tui-grid-row:hover td,
+.tui-grid-row-hover .tui-grid-cell {
+    background-color: rgba(var(--cui-primary-rgb), .08) !important;
+    cursor: pointer;
+}
+
+.tui-grid-row-hover .tui-grid-cell {
+    transition: background-color .1s;
+}
+
+.tui-grid-header-area .tui-grid-cell {
+    background-color: var(--cui-tertiary-bg) !important;
+    font-weight: 600;
+    font-size: .83rem;
+}
+
+.tui-grid-pagination {
+    padding: 12px 0 4px;
+    display: flex;
+    justify-content: center;
+}
+
+.tui-page-btn {
+    border: 1px solid var(--cui-border-color) !important;
+    border-radius: var(--cui-border-radius-sm) !important;
+    color: var(--cui-body-color) !important;
+    font-size: .82rem !important;
+    min-width: 28px !important;
+    height: 28px !important;
+    margin: 0 2px !important;
+}
+
+.tui-page-btn.tui-is-selected {
+    background-color: var(--cui-primary) !important;
+    border-color: var(--cui-primary) !important;
+    color: var(--cui-white) !important;
+}
+
+.tui-page-btn:hover:not(.tui-is-selected) {
+    background-color: var(--cui-tertiary-bg) !important;
+}
+
+/* Autocomplete bridge */
+.autocomplete-wrap {
+    position: relative;
+    display: inline-block;
+}
+
+.autocomplete-balloon {
+    display: none;
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    z-index: 1050;
+    min-width: 240px;
+    background: var(--cui-body-bg);
+    border: 1px solid var(--cui-border-color);
+    border-radius: var(--cui-border-radius-lg);
+    box-shadow: var(--cui-box-shadow);
+    overflow: hidden;
+}
+
+.autocomplete-balloon::before {
+    content: '';
+    position: absolute;
+    top: -7px;
+    left: 16px;
+    width: 12px;
+    height: 12px;
+    background: var(--cui-body-bg);
+    border-left: 1px solid var(--cui-border-color);
+    border-top: 1px solid var(--cui-border-color);
+    transform: rotate(45deg);
+}
+
+.autocomplete-item {
+    padding: 8px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid var(--cui-border-color);
+}
+
+.autocomplete-item:last-child {
+    border-bottom: none;
+}
+
+.autocomplete-item:hover {
+    background: var(--cui-tertiary-bg);
+}
+
+.autocomplete-item:hover .ac-code {
+    color: var(--cui-primary);
+}
+
+.ac-code {
+    font-weight: 700;
+    color: var(--cui-body-color);
+    font-family: var(--cui-font-monospace);
+    min-width: 50px;
+}
+
+.ac-name {
+    color: var(--cui-secondary-color);
+    font-size: 12px;
+}
+
+.ac-empty {
+    padding: 10px 14px;
+    color: var(--cui-tertiary-color);
+    font-size: 13px;
+    text-align: center;
+}
+
+/* Ajax loading overlay */
+#global-spinner-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(var(--cui-body-bg-rgb), .6);
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    visibility: hidden;
+    opacity: 0;
+    transition: opacity .2s ease, visibility .2s ease;
+}
+
+#global-spinner-overlay.active {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* Auto detail modal refinement */
+.tui-auto-modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+#tui-auto-modal-form {
+    display: grid;
+    gap: 0;
+}
+
+#tui-auto-modal .detail-row {
+    display: grid;
+    grid-template-columns: minmax(148px, 190px) minmax(0, 1fr);
+    align-items: center;
+    gap: 14px;
+    min-height: 42px;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--cui-border-color);
+}
+
+#tui-auto-modal .detail-row:first-child {
+    border-top: 1px solid var(--cui-border-color);
+}
+
+#tui-auto-modal .detail-label {
+    width: auto;
+    min-width: 0;
+    color: var(--cui-secondary-color);
+    font-size: .78rem;
+    font-weight: 700;
+    letter-spacing: 0;
+    white-space: normal;
+    overflow-wrap: anywhere;
+}
+
+#tui-auto-modal .detail-value {
+    min-width: 0;
+    color: var(--cui-body-color);
+    font-size: .9rem;
+    line-height: 1.45;
+    word-break: break-word;
+}
+
+#tui-auto-modal .detail-readonly {
+    display: inline-flex;
+    align-items: center;
+    max-width: 100%;
+    min-height: 28px;
+    padding: 3px 0;
+}
+
+#tui-auto-modal .detail-input {
+    height: 32px;
+    border-radius: var(--cui-border-radius);
+}
+
+@media (max-width: 576px) {
+    #tui-auto-modal .detail-row {
+        grid-template-columns: 1fr;
+        gap: 4px;
+        align-items: start;
+    }
+}
+
+/* Scaffold generated screen controls */
+.scaffold-search-control,
+.scaffold-radio-group {
+    width: 160px;
+}
+
+.toast-grid-page-size {
+    width: 80px;
+}
+
+.toast-grid {
+    width: 100%;
+}
+
+/* DatePicker layering */
+.history-search-card,
+.scaffold-search-card {
+    position: relative;
+    z-index: 30;
+    overflow: visible;
+}
+
+.history-search-card .card-body,
+.history-search-card .row,
+.history-search-card .col-auto,
+.scaffold-search-card .card-body,
+.scaffold-search-card .row,
+.scaffold-search-card .col-auto {
+    overflow: visible;
+}
+
+.history-date-field,
+.scaffold-date-field {
+    position: relative;
+    z-index: 40;
+}
+
+.history-date-field,
+.scaffold-date-field-md {
+    width: 160px;
+}
+
+.scaffold-date-field-sm {
+    width: 150px;
+}
+
+.history-datepicker-input,
+.scaffold-datepicker-input {
+    width: 100%;
+    height: 38px;
+}
+
+#sentAtPickerLayer,
+.scaffold-date-picker-layer {
+    position: absolute;
+    top: 38px;
+    left: 0;
+    z-index: 3000;
+}
+
+#sentAtPickerLayer,
+.scaffold-date-picker-layer {
+    margin-top: -1px;
+}
+
+#sentAtPickerLayer .tui-datepicker,
+.scaffold-date-picker-layer .tui-datepicker {
+    z-index: 3000;
+    box-shadow: var(--cui-box-shadow-lg);
+}

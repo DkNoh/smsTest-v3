@@ -61,8 +61,8 @@ public final class ServiceTemplate {
               .append("        }\n")
               .append("    }\n\n")
               .append("    @Transactional\n")
-              .append("    public void delete(String id) {\n")
-              .append("        mapper.delete(id);\n")
+              .append("    public void delete(").append(model.pkJavaType()).append(" ").append(model.pkFieldName()).append(") {\n")
+              .append("        mapper.delete(").append(model.pkFieldName()).append(");\n")
               .append("    }\n");
         }
 
@@ -71,10 +71,8 @@ public final class ServiceTemplate {
               .append("    public void downloadExcel(").append(cls).append("SearchRequestDTO request, HttpServletResponse response) {\n")
               .append("        String[] headers = {").append(joinQuoted(model, false)).append("};\n")
               .append("        String[] keys = {").append(joinQuoted(model, true)).append("};\n");
-            if (model.includePrivacy()) {
-                sb.append("        // TODO: 개인정보 컬럼은 마스킹된 값으로 조회되는지 확인한다.\n");
-            }
             sb.append("        List<Map<String, Object>> list = mapper.selectListForExcel(request);\n")
+              .append(maskExcelRows(model))
               .append("        ExcelUtil.downloadExcel(response, \"").append(cls).append("_export\", headers, list, keys);\n")
               .append("    }\n");
         }
@@ -91,6 +89,23 @@ public final class ServiceTemplate {
             }
             String value = model.getColumns().get(i).trim();
             sb.append("\"").append(upperCase ? value.toUpperCase() : value).append("\"");
+        }
+        return sb.toString();
+    }
+
+    private static String maskExcelRows(ScaffoldModel model) {
+        StringBuilder sb = new StringBuilder();
+        for (ScaffoldModel.ColumnConfig column : model.columnConfigs()) {
+            if (!column.hasMask()) {
+                continue;
+            }
+            sb.append("        for (Map<String, Object> row : list) {\n")
+              .append("            Object value = row.get(\"").append(column.columnName()).append("\");\n")
+              .append("            if (value != null) {\n")
+              .append("                // TODO: ").append(column.maskType()).append(" 마스킹 정책에 맞게 MaskingUtil 적용\n")
+              .append("                row.put(\"").append(column.columnName()).append("\", value.toString());\n")
+              .append("            }\n")
+              .append("        }\n");
         }
         return sb.toString();
     }

@@ -4,24 +4,40 @@
  */
 const TuiCommon = (() => {
 
+    const rawValue = v => (v && typeof v === 'object' && 'value' in v) ? v.value : v;
+
+    const formatDate = (value, pattern = 'YYYY-MM-DD') => {
+        const val = rawValue(value);
+        if (!val) return '-';
+        const parsed = dayjs(val);
+        return parsed.isValid() ? parsed.format(pattern) : String(val);
+    };
+
+    const maskValue = (value, type) => {
+        const val = rawValue(value);
+        if (!val) return '-';
+        const text = String(val);
+        if (type === 'PHONE') return text.replace(/(\d{3})(\d+)(\d{4})/, function (_, a, b, c) { return a + '*'.repeat(b.length) + c; });
+        if (type === 'NAME') return text.length <= 1 ? '*' : text[0] + '*'.repeat(text.length - 1);
+        if (type === 'EMAIL') return text.replace(/^(.)(.*)(@.*)$/, function (_, a, b, c) { return a + '*'.repeat(b.length) + c; });
+        if (type === 'RRN') return text.replace(/^(\d{6})[-]?(\d).*/, '$1-$2******');
+        return text;
+    };
+
     const fmt = {
         // TUI Grid formatter({value})와 직접 호출(문자열) 양쪽을 지원한다
         // 날짜만(LocalDate)은 YYYY-MM-DD, 일시(LocalDateTime)는 YYYY-MM-DD HH:mm
         date: v => {
-            const val = (v && typeof v === 'object' && 'value' in v) ? v.value : v;
-            if (!val) return '-';
-            const parsed = dayjs(val);
-            if (!parsed.isValid()) return String(val);
-            return String(val).length > 10
-                ? parsed.format('YYYY-MM-DD HH:mm')
-                : parsed.format('YYYY-MM-DD');
+            const val = rawValue(v);
+            const pattern = String(val || '').length > 10 ? 'YYYY-MM-DD HH:mm' : 'YYYY-MM-DD';
+            return formatDate(val, pattern);
         },
 
         sendStatus: ({ value }) => {
             const map = {
-                SUCCESS: ['badge-success', '성공'],
-                FAIL:    ['badge-fail',    '실패'],
-                WAIT:    ['badge-wait',    '대기'],
+                SUCCESS: ['bg-success', '성공'],
+                FAIL:    ['bg-danger',  '실패'],
+                WAIT:    ['bg-warning text-dark', '대기'],
             };
             const clsAndLabel = map[value] || ['', value || '-'];
             const cls = clsAndLabel[0];
@@ -30,17 +46,17 @@ const TuiCommon = (() => {
         },
 
         sendType: ({ value }) => {
-            const cls   = { SMS: 'type-sms', LMS: 'type-lms', ALIMTALK: 'type-alimtalk' };
+            const cls   = { SMS: 'bg-primary', LMS: 'bg-info text-dark', ALIMTALK: 'bg-warning text-dark' };
             const label = { SMS: 'SMS',       LMS: 'LMS',      ALIMTALK: '알림톡' };
             return value
-                ? `<span class="type-badge ${cls[value] || ''}">${label[value] || value}</span>`
+                ? `<span class="badge ${cls[value] || 'bg-secondary'}">${label[value] || value}</span>`
                 : '-';
         },
 
         resendYn: ({ value }) =>
             value === 'Y'
-                ? '<span class="resend-y">Y</span>'
-                : '<span class="resend-n">N</span>',
+                ? '<span class="badge bg-primary">Y</span>'
+                : '<span class="badge bg-secondary">N</span>',
     };
 
     const gridDefaults = {
@@ -70,14 +86,16 @@ const TuiCommon = (() => {
 
         const fnName = `__movePage_${paginationId.replace(/-/g, '_')}`;
         
+        wrap.classList.add('d-flex', 'justify-content-center', 'gap-1');
+
         const btn = (label, p, disabled) =>
-            `<button class="page-btn${disabled ? ' disabled' : ''}"
-                     ${disabled ? 'disabled' : `onclick="${fnName}(${p})"`}>${label}</button>`;
+            `<button type="button" class="btn btn-sm btn-outline-secondary"
+                     ${disabled ? 'disabled aria-disabled="true"' : `onclick="${fnName}(${p})"`}>${label}</button>`;
 
         let html = btn('«', 1,             startPage === 1);
         html    += btn('‹', startPage - 1, startPage === 1);
         for (let p = startPage; p <= endPage; p++) {
-            html += `<button class="page-btn${p === page ? ' active' : ''}"
+            html += `<button type="button" class="btn btn-sm ${p === page ? 'btn-primary' : 'btn-outline-secondary'}"
                              onclick="${fnName}(${p})">${p}</button>`;
         }
         html += btn('›', endPage + 1, endPage === totalPages);
@@ -94,6 +112,8 @@ const TuiCommon = (() => {
 
     return {
         fmt,
+        formatDate,
+        maskValue,
         gridDefaults,
         updateTotalCount,
         renderPagination,

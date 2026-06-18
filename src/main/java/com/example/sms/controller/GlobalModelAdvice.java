@@ -2,6 +2,10 @@ package com.example.sms.controller;
 
 import com.example.sms.auth.SmsUserPrincipal;
 import com.example.sms.service.menu.MenuSource;
+import com.example.sms.service.menu.PageAuth;
+import jakarta.servlet.http.HttpServletRequest;
+import java.util.Arrays;
+import org.springframework.core.env.Environment;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -15,17 +19,45 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 public class GlobalModelAdvice {
 
     private final MenuSource menuSource;
+    private final Environment environment;
 
-    public GlobalModelAdvice(MenuSource menuSource) {
+    public GlobalModelAdvice(MenuSource menuSource, Environment environment) {
         this.menuSource = menuSource;
+        this.environment = environment;
     }
 
     @ModelAttribute
-    public void addLayoutAttributes(@AuthenticationPrincipal SmsUserPrincipal principal, Model model) {
+    public void addLayoutAttributes(@AuthenticationPrincipal SmsUserPrincipal principal,
+                                    Model model,
+                                    HttpServletRequest request) {
         if (principal == null) {
+            model.addAttribute("pageAuth", PageAuth.none());
             return;
         }
         model.addAttribute("user", principal);
         model.addAttribute("menus", menuSource.getMenuTree(principal.getRoleCodes()));
+        model.addAttribute("pageAuth", resolvePageAuth(principal, request));
+    }
+
+    private PageAuth resolvePageAuth(SmsUserPrincipal principal, HttpServletRequest request) {
+        if (isLocalProfile()) {
+            return PageAuth.all();
+        }
+        String path = request.getRequestURI().substring(request.getContextPath().length());
+        return PageAuth.from(menuSource.getPermissions(normalizePath(path), principal.getRoleCodes()));
+    }
+
+    private boolean isLocalProfile() {
+        return Arrays.stream(environment.getActiveProfiles()).anyMatch("local"::equals);
+    }
+
+    private String normalizePath(String path) {
+        if (path == null || path.isBlank()) {
+            return "/";
+        }
+        if (path.length() > 1 && path.endsWith("/")) {
+            return path.substring(0, path.length() - 1);
+        }
+        return path;
     }
 }

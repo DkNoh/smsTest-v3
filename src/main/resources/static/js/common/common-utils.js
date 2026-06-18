@@ -7,12 +7,55 @@
 // 글로벌 로딩 스피너 및 커스텀 모달 DOM 초기화
 // ════════════════════════════════════════════════════
 let ajaxCount = 0;
+const refreshLucideIcons = () => {
+    if (window.lucide && typeof window.lucide.createIcons === 'function') {
+        window.lucide.createIcons();
+    }
+};
+
+const getFrameworkModal = (el) => {
+    if (!el) return null;
+    if (window.coreui && window.coreui.Modal) {
+        return window.coreui.Modal.getOrCreateInstance(el);
+    }
+    if (window.bootstrap && window.bootstrap.Modal) {
+        return window.bootstrap.Modal.getOrCreateInstance(el);
+    }
+    return null;
+};
+
+const showModalElement = (el) => {
+    const instance = getFrameworkModal(el);
+    if (instance) {
+        instance.show();
+        return;
+    }
+    el.style.display = 'block';
+    el.removeAttribute('aria-hidden');
+    el.setAttribute('aria-modal', 'true');
+    el.classList.add('show');
+    document.body.classList.add('modal-open');
+};
+
+const hideModalElement = (el) => {
+    const instance = getFrameworkModal(el);
+    if (instance) {
+        instance.hide();
+        return;
+    }
+    el.classList.remove('show');
+    el.setAttribute('aria-hidden', 'true');
+    el.removeAttribute('aria-modal');
+    el.style.display = 'none';
+    document.body.classList.remove('modal-open');
+};
+
 document.addEventListener("DOMContentLoaded", () => {
     // 스피너 초기화
     if (!document.getElementById('global-spinner-overlay')) {
         const overlay = document.createElement('div');
         overlay.id = 'global-spinner-overlay';
-        overlay.innerHTML = '<div class="spinner"></div>';
+        overlay.innerHTML = '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>';
         document.body.appendChild(overlay);
     }
     
@@ -20,24 +63,37 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!document.getElementById('custom-modal-overlay')) {
         const modalOverlay = document.createElement('div');
         modalOverlay.id = 'custom-modal-overlay';
+        modalOverlay.className = 'modal fade';
+        modalOverlay.tabIndex = -1;
+        modalOverlay.setAttribute('aria-hidden', 'true');
+        modalOverlay.setAttribute('aria-labelledby', 'custom-modal-title');
         modalOverlay.innerHTML = `
-            <div class="custom-modal-box">
-                <div class="custom-modal-header" id="custom-modal-title">알림</div>
-                <div class="custom-modal-body" id="custom-modal-msg"></div>
-                <div class="custom-modal-footer">
-                    <button class="custom-modal-btn cancel-btn" id="custom-modal-btn-cancel" style="display: none;">취소</button>
-                    <button class="custom-modal-btn confirm-btn" id="custom-modal-btn-confirm">확인</button>
+            <div class="modal-dialog modal-dialog-centered modal-sm">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="custom-modal-title">알림</h5>
+                    </div>
+                    <div class="modal-body text-center" id="custom-modal-msg" style="white-space: pre-line;"></div>
+                    <div class="modal-footer justify-content-center">
+                        <button type="button" class="btn btn-outline-secondary d-none" id="custom-modal-btn-cancel">
+                            <i data-lucide="x"></i><span>취소</span>
+                        </button>
+                        <button type="button" class="btn btn-primary" id="custom-modal-btn-confirm">
+                            <i data-lucide="check"></i><span>확인</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         `;
         document.body.appendChild(modalOverlay);
     }
+    refreshLucideIcons();
 });
 
 // ════════════════════════════════════════════════════
 // 커스텀 알림/확인 모달 제어 로직
 // ════════════════════════════════════════════════════
-const _showCustomModal = (type, msg, title, onConfirm) => {
+const _showCustomModal = (type, msg, title, onConfirm, onCancel) => {
     const overlay = document.getElementById('custom-modal-overlay');
     if (!overlay) return alert(msg); // fallback
 
@@ -47,12 +103,12 @@ const _showCustomModal = (type, msg, title, onConfirm) => {
     const confirmBtn = document.getElementById('custom-modal-btn-confirm');
 
     titleEl.textContent = title || '알림';
-    msgEl.innerHTML = (msg || '').replace(/\n/g, '<br>');
+    msgEl.textContent = msg || '';
 
     if (type === 'confirm') {
-        cancelBtn.style.display = 'block';
+        cancelBtn.classList.remove('d-none');
     } else {
-        cancelBtn.style.display = 'none';
+        cancelBtn.classList.add('d-none');
     }
 
     // 기존 이벤트 리스너 제거용 clone
@@ -63,15 +119,17 @@ const _showCustomModal = (type, msg, title, onConfirm) => {
     cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
 
     newConfirmBtn.addEventListener('click', () => {
-        overlay.classList.remove('active');
+        hideModalElement(overlay);
         if (onConfirm) onConfirm();
     });
 
     newCancelBtn.addEventListener('click', () => {
-        overlay.classList.remove('active');
+        hideModalElement(overlay);
+        if (onCancel) onCancel();
     });
 
-    overlay.classList.add('active');
+    showModalElement(overlay);
+    refreshLucideIcons();
     
     // 모달이 열릴 때 확인 버튼에 포커스를 강제로 주어 엔터/스페이스로 바로 닫을 수 있게 처리
     // 브라우저 렌더링(visibility 변경 등) 완료 후 포커스를 잡도록 50ms 지연
@@ -94,10 +152,10 @@ const _showToast = (msg, type = 'info') => {
     }
 
     let bgClass = 'bg-primary';
-    let icon = 'ℹ️';
-    if (type === 'success') { bgClass = 'bg-success'; icon = '✅'; }
-    if (type === 'error') { bgClass = 'bg-danger'; icon = '⚠️'; }
-    if (type === 'warning') { bgClass = 'bg-warning text-dark'; icon = '⚡'; }
+    let icon = 'info';
+    if (type === 'success') { bgClass = 'bg-success'; icon = 'circle-check'; }
+    if (type === 'error') { bgClass = 'bg-danger'; icon = 'circle-x'; }
+    if (type === 'warning') { bgClass = 'bg-warning text-dark'; icon = 'triangle-alert'; }
 
     const toastEl = document.createElement('div');
     toastEl.className = `toast align-items-center text-white ${bgClass} border-0`;
@@ -108,14 +166,15 @@ const _showToast = (msg, type = 'info') => {
     // 닫기 버튼 렌더링
     toastEl.innerHTML = `
         <div class="d-flex">
-            <div class="toast-body fw-bold">
-                ${icon} ${msg}
+            <div class="toast-body fw-bold d-flex align-items-center">
+                <i data-lucide="${icon}" class="toast-icon"></i><span>${msg}</span>
             </div>
             <button type="button" class="btn-close btn-close-white me-2 m-auto" data-coreui-dismiss="toast" aria-label="Close"></button>
         </div>
     `;
     
     container.appendChild(toastEl);
+    refreshLucideIcons();
     
     // CoreUI (또는 Bootstrap) Toast API 사용
     if (typeof coreui !== 'undefined' && coreui.Toast) {
@@ -465,6 +524,7 @@ const CommonUtils = (() => {
     return {
         initCombos,
         initAutocomplete,
+        refreshIcons: refreshLucideIcons,
         setDefaultDateTime,
         getSearchParams,
         resetFields,
@@ -474,6 +534,6 @@ const CommonUtils = (() => {
         fmt,
         toast: (msg, type) => _showToast(msg, type),
         alert: (msg, title, callback) => _showCustomModal('alert', msg, title, callback),
-        confirm: (msg, callback, title) => _showCustomModal('confirm', msg, title, callback)
+        confirm: (msg, callback, title, onCancel) => _showCustomModal('confirm', msg, title, callback, onCancel)
     };
 })();
