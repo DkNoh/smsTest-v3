@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.sms.mapper.sms.SmsHistoryMapper">
+
+    <!-- 화면 DatePicker 검색값은 YYYYMMDD 문자열로 전달된다 (TuiPageBuilder 규약).
+         비교 컬럼이 DATE/TIMESTAMP면 TO_DATE/TO_TIMESTAMP로 감싸고,
+         단일 날짜 = 조건은 당일 00:00:00 이상, 다음날 00:00:00 미만 범위로 변환한다. -->
+
+    <sql id="searchConditions">
+        <where>
+        </where>
+    </sql>
+
+    <select id="count" resultType="int">
+        SELECT COUNT(1) FROM (
+            SELECT
+                A.SMS_HISTORY_ID AS SMS_HISTORY_ID,
+                A.REQUEST_ID AS REQUEST_ID,
+                A.SENT_AT AS SENT_AT,
+                A.RECEIVER_NO AS RECEIVER_NO,
+                A.SENDER_NO AS SENDER_NO,
+                A.SEND_TYPE AS SEND_TYPE,
+                A.SEND_STATUS AS SEND_STATUS,
+                A.RESULT_CD AS RESULT_CD,
+                A.RESULT_MSG AS RESULT_MSG,
+                A.UPD_DTTM AS UPD_DTTM
+            FROM SMS.SMS_HISTORY A
+            WHERE 1 = 1
+                <if test="sentAt != null and sentAt != ''">
+                    AND A.SENT_AT <![CDATA[ >= ]]> TO_TIMESTAMP(#{sentAt} || '000000', 'YYYYMMDDHH24MISS') AND A.SENT_AT <![CDATA[ < ]]> TO_TIMESTAMP(#{sentAt} || '000000', 'YYYYMMDDHH24MISS') + INTERVAL '1' DAY
+                </if>
+                <if test="receiverNo != null and receiverNo != ''">
+                    AND A.RECEIVER_NO LIKE '%' || #{receiverNo} || '%'
+                </if>
+                <if test="sendStatus != null and sendStatus != ''">
+                    AND A.SEND_STATUS = #{sendStatus}
+                </if>
+                <if test="sendType != null and sendType != ''">
+                    AND A.SEND_TYPE = #{sendType}
+                </if>
+        ) A
+        <include refid="searchConditions"/>
+    </select>
+
+    <select id="selectList" resultType="com.example.sms.vo.sms.SmsHistoryVO">
+        SELECT A.*
+        FROM (
+            SELECT
+                A.SMS_HISTORY_ID AS SMS_HISTORY_ID,
+                A.REQUEST_ID AS REQUEST_ID,
+                A.SENT_AT AS SENT_AT,
+                A.RECEIVER_NO AS RECEIVER_NO,
+                A.SENDER_NO AS SENDER_NO,
+                A.SEND_TYPE AS SEND_TYPE,
+                A.SEND_STATUS AS SEND_STATUS,
+                A.RESULT_CD AS RESULT_CD,
+                A.RESULT_MSG AS RESULT_MSG,
+                A.UPD_DTTM AS UPD_DTTM
+            FROM SMS.SMS_HISTORY A
+            WHERE 1 = 1
+                <if test="sentAt != null and sentAt != ''">
+                    AND A.SENT_AT <![CDATA[ >= ]]> TO_TIMESTAMP(#{sentAt} || '000000', 'YYYYMMDDHH24MISS') AND A.SENT_AT <![CDATA[ < ]]> TO_TIMESTAMP(#{sentAt} || '000000', 'YYYYMMDDHH24MISS') + INTERVAL '1' DAY
+                </if>
+                <if test="receiverNo != null and receiverNo != ''">
+                    AND A.RECEIVER_NO LIKE '%' || #{receiverNo} || '%'
+                </if>
+                <if test="sendStatus != null and sendStatus != ''">
+                    AND A.SEND_STATUS = #{sendStatus}
+                </if>
+                <if test="sendType != null and sendType != ''">
+                    AND A.SEND_TYPE = #{sendType}
+                </if>
+        ) A
+        <include refid="searchConditions"/>
+        ORDER BY A.SMS_HISTORY_ID
+        OFFSET #{offset} ROWS FETCH NEXT #{size} ROWS ONLY
+    </select>
+
+    <insert id="insert">
+        INSERT INTO SMS.SMS_HISTORY (
+            SENT_AT,
+            RECEIVER_NO,
+            SENDER_NO,
+            SEND_TYPE,
+            SEND_STATUS,
+            RESULT_CD,
+            RESULT_MSG,
+            SMS_HISTORY_ID
+        ) VALUES (
+            #{sentAt},
+            #{receiverNo},
+            #{senderNo},
+            #{sendType},
+            #{sendStatus},
+            #{resultCd},
+            #{resultMsg},
+            SYSTIMESTAMP
+        )
+    </insert>
+
+    <!-- update 기준: 수정 허용 컬럼만 SET하고, 잠금 컬럼을 지정한 경우 WHERE에 함께 둔다. -->
+    <update id="update">
+        UPDATE SMS.SMS_HISTORY
+           SET SENT_AT = #{sentAt},
+               RECEIVER_NO = #{receiverNo},
+               SENDER_NO = #{senderNo},
+               SEND_TYPE = #{sendType},
+               SEND_STATUS = #{sendStatus},
+               RESULT_CD = #{resultCd},
+               RESULT_MSG = #{resultMsg},
+               SMS_HISTORY_ID = SYSTIMESTAMP
+         WHERE SMS_HISTORY_ID = #{smsHistoryId}
+           AND SMS_HISTORY_ID = #{beforeSmsHistoryId}
+    </update>
+
+    <delete id="delete">
+        DELETE FROM SMS.SMS_HISTORY WHERE SMS_HISTORY_ID = #{smsHistoryId}
+    </delete>
+
+</mapper>

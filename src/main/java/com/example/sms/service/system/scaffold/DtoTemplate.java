@@ -9,9 +9,7 @@ public final class DtoTemplate {
     }
 
     public static String generate(ScaffoldModel model) {
-        List<String> vars = model.getSearchVars().isEmpty()
-            ? List.of("searchKeyword")
-            : model.getSearchVars();
+        List<ScaffoldModel.SearchParam> params = model.searchParams();
 
         StringBuilder sb = new StringBuilder();
         sb.append("package com.example.sms.dto.").append(model.moduleName()).append(";\n\n")
@@ -22,8 +20,8 @@ public final class DtoTemplate {
           .append("@EqualsAndHashCode(callSuper = true)\n")
           .append("public class ").append(model.domainClass()).append("SearchRequestDTO extends PageRequestDTO {\n\n");
 
-        for (String var : vars) {
-            sb.append("    private String ").append(var).append(";\n");
+        for (ScaffoldModel.SearchParam param : params) {
+            sb.append("    private String ").append(param.name()).append(";\n");
         }
         sb.append("}\n");
         return sb.toString();

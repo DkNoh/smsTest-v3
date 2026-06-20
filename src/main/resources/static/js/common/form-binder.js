@@ -41,6 +41,7 @@ const FormBinder = (() => {
      * - checkbox: checked 여부를 'Y'/'N'으로 변환
      * - radio: checked 항목의 value (선택 없음이면 null)
      * - 빈 문자열은 null로 전송한다 (BASE 확정 정책, 2026-06-12)
+     * - data-mask 필드(IMask 부착)는 표시값이 아니라 unmaskedValue를 전송한다 (field-format.js)
      */
     const toObject = (formSelector) => {
         const form = document.querySelector(formSelector);
@@ -60,7 +61,8 @@ const FormBinder = (() => {
                     result[name] = null;
                 }
             } else {
-                result[name] = field.value === '' ? null : field.value;
+                const raw = field._imask ? field._imask.unmaskedValue : field.value;
+                result[name] = raw === '' ? null : raw;
             }
         });
         return result;

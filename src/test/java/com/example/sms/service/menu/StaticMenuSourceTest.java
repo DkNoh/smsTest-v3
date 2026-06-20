@@ -28,6 +28,15 @@ class StaticMenuSourceTest {
     }
 
     @Test
+    void local_메뉴_트리_확인_URL에는_모든_권한을_부여한다() {
+        // when
+        Set<MenuPermission> permissions = provider.getPermissions("/system/menu-tree", ROLES);
+
+        // then
+        assertThat(permissions).containsExactlyInAnyOrder(MenuPermission.values());
+    }
+
+    @Test
     void baseline에_없는_URL에는_권한을_부여하지_않는다() {
         // when
         Set<MenuPermission> permissions = provider.getPermissions("/unknown/path", ROLES);

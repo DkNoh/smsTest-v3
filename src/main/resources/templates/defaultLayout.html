@@ -11,25 +11,32 @@
 
     <!-- Toast UI & 기타 라이브러리 (로컬 참조) -->
     <link rel="stylesheet" href="/lib/tui-pagination.css" />
+    <link rel="stylesheet" href="/lib/tui-date-picker.css" />
     <link rel="stylesheet" href="/lib/tui-grid.css" />
 
-    <script src="/lib/tui-pagination.js"></script>
+    <script src="/lib/tui-pagination.min.js"></script>
     <script src="/lib/xlsx.full.min.js"></script>
-    <script src="/lib/tui-grid.js"></script>
+    <script src="/lib/tui-date-picker.min.js"></script>
+    <script src="/lib/tui-grid.min.js"></script>
     <script src="/lib/axios.min.js"></script>
     <script src="/lib/dayjs.min.js"></script>
     <script src="/lib/ko.js"></script>
+    <script src="/lib/lucide.js"></script>
+    <script src="/lib/imask.min.js"></script>
+    <script src="/lib/just-validate.min.js"></script>
     <script>dayjs.locale('ko');</script>
 
     <!-- CoreUI CSS -->
     <link rel="stylesheet" th:href="@{/vendor/coreui/css/coreui.min.css}">
 
-    <!-- 공통 CSS/JS -->
-    <link rel="stylesheet" th:href="@{/css/admin-common.css}" />
+    <!-- Project shell/bridge CSS: CoreUI component styling remains in CoreUI. -->
+    <link rel="stylesheet" th:href="@{/css/admin-layout.css}" />
+    <link rel="stylesheet" th:href="@{/css/admin-ui-bridge.css}" />
     <script th:src="@{/js/common/common-utils.js}"></script>
     <script th:src="@{/js/common/tui-common.js}"></script>
     <script th:src="@{/js/common/tui-page-builder.js}"></script>
     <script th:src="@{/js/common/form-binder.js}"></script>
+    <script th:src="@{/js/common/field-format.js}"></script>
 
     <!-- 로그인 사용자 정보를 자바스크립트 전역 변수로 노출. 사용자 식별은 EMP_ID + DEP_ID -->
     <script th:inline="javascript">
@@ -40,175 +47,23 @@
             empNm:  /*[[${user != null ? user.empNm : ''}]]*/ '',
             depNm:  /*[[${user != null ? user.depNm : ''}]]*/ ''
         };
+        window.PAGE_AUTH = {
+            read:     /*[[${pageAuth != null ? pageAuth.read : false}]]*/ false,
+            create:   /*[[${pageAuth != null ? pageAuth.create : false}]]*/ false,
+            update:   /*[[${pageAuth != null ? pageAuth.update : false}]]*/ false,
+            delete:   /*[[${pageAuth != null ? pageAuth.delete : false}]]*/ false,
+            approve:  /*[[${pageAuth != null ? pageAuth.approve : false}]]*/ false,
+            cancel:   /*[[${pageAuth != null ? pageAuth.cancel : false}]]*/ false,
+            download: /*[[${pageAuth != null ? pageAuth.download : false}]]*/ false,
+            maskView: /*[[${pageAuth != null ? pageAuth.maskView : false}]]*/ false
+        };
         /*]]>*/
     </script>
-
-    <!-- 기존 커스텀 레이아웃 강제 복원 (잘림 방지 및 반응형) -->
-    <style>
-        body {
-            display: flex;
-            flex-direction: row;
-            height: 100vh;
-            overflow: hidden; /* 화면 스크롤 방지 */
-            margin: 0;
-            background-color: #f1f3f5;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif !important;
-        }
-
-        .sidebar {
-            position: relative !important; /* CoreUI의 fixed를 해제하여 오버랩 방지 */
-            height: 100vh !important;
-            flex-shrink: 0 !important;
-            transition: width 0.2s ease-in-out, min-width 0.2s ease-in-out, max-width 0.2s ease-in-out, flex 0.2s ease-in-out !important;
-            width: 256px !important;
-            min-width: 256px !important;
-            max-width: 256px !important;
-            flex: 0 0 256px !important;
-            --cui-sidebar-width: 256px !important;
-        }
-
-        .sidebar.collapsed {
-            width: 64px !important;
-            min-width: 64px !important;
-            max-width: 64px !important;
-            flex: 0 0 64px !important;
-            --cui-sidebar-width: 64px !important;
-        }
-
-        /* collapsed 상태일 때 글자나 메뉴 숨김 처리 (CoreUI narrow 호환) */
-        .sidebar.collapsed .sidebar-brand-full,
-        .sidebar.collapsed .nav-group-toggle span,
-        .sidebar.collapsed .nav-item span {
-            display: none !important;
-        }
-        .sidebar.collapsed .sidebar-brand-narrow {
-            display: flex !important;
-            justify-content: center;
-            width: 100%;
-        }
-        .sidebar.collapsed .nav-group-items {
-            display: none !important;
-        }
-
-        .main-wrapper {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            min-width: 0; /* flex 버그 방지 */
-            height: 100vh;
-        }
-
-        .content-area {
-            flex-grow: 1;
-            overflow-y: auto;
-            padding: 1.5rem;
-        }
-
-        /* =========================================
-           [Premium UI Overrides]
-           기존 화면들을 세련되게 만드는 공통 디자인 튜닝
-           ========================================= */
-
-        /* 1. 버튼 둥글게 & 호버 애니메이션 */
-        .btn {
-            border-radius: 6px !important;
-            font-weight: 500 !important;
-            transition: all 0.2s ease-in-out !important;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-        }
-        .btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-
-        /* 2. 카드 모서리 및 입체감 강화 */
-        .card {
-            border-radius: 12px !important;
-            border: 1px solid rgba(0,0,0,0.05) !important;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.03) !important;
-        }
-        .card-header {
-            background-color: #ffffff !important;
-            border-bottom: 1px solid rgba(0,0,0,0.05) !important;
-            border-radius: 12px 12px 0 0 !important;
-            padding: 1rem 1.25rem !important;
-        }
-
-        /* 3. TUI Grid 모던화 (세로선 제거, 여백 확대) */
-        .tui-grid-container {
-            border-color: rgba(0,0,0,0.08) !important;
-            font-family: inherit !important;
-        }
-        .tui-grid-header-area {
-            background-color: #f8f9fa !important;
-            border-color: rgba(0,0,0,0.08) !important;
-        }
-        .tui-grid-cell-header {
-            background-color: transparent !important;
-            border-left: none !important;
-            border-right: none !important;
-            font-weight: 600 !important;
-            color: #495057 !important;
-        }
-        .tui-grid-cell {
-            border-left: none !important;
-            border-right: none !important;
-            border-bottom: 1px solid rgba(0,0,0,0.05) !important;
-            color: #343a40 !important;
-        }
-        .tui-grid-row-odd .tui-grid-cell {
-            background-color: #fafbfa !important;
-        }
-        /* ── Autocomplete 말풍선 (공통) ── */
-        .autocomplete-wrap { position: relative; display: inline-block; }
-        .autocomplete-balloon {
-            display: none; position: absolute; top: calc(100% + 8px); left: 0;
-            z-index: 1050; min-width: 240px; background: #fff;
-            border: 1px solid #dee2e6; border-radius: 8px;
-            box-shadow: 0 6px 20px rgba(0,0,0,.15); overflow: hidden;
-        }
-        .autocomplete-balloon::before {
-            content: ''; position: absolute; top: -7px; left: 16px;
-            width: 12px; height: 12px; background: #fff;
-            border-left: 1px solid #dee2e6; border-top: 1px solid #dee2e6;
-            transform: rotate(45deg);
-        }
-        .autocomplete-item {
-            padding: 8px 14px; font-size: 13px; cursor: pointer;
-            display: flex; align-items: center; gap: 8px;
-            border-bottom: 1px solid #f1f3f5;
-        }
-        .autocomplete-item:last-child { border-bottom: none; }
-        .autocomplete-item:hover { background: #f8f9fa; }
-        .autocomplete-item:hover .ac-code { color: #0d6efd; }
-        .ac-code { font-weight: 700; color: #495057; font-family: monospace; min-width: 50px; }
-        .ac-name { color: #868e96; font-size: 12px; }
-        .ac-empty { padding: 10px 14px; color: #adb5bd; font-size: 13px; text-align: center; }
-
-        /* Row hover — 전체 행 음영 */
-        .tui-grid-row-hover .tui-grid-cell {
-            background-color: rgba(13, 110, 253, 0.06) !important;
-            cursor: pointer;
-            transition: background-color 0.1s;
-        }
-
-        /* 4. 입력창(Input) 디자인 */
-        .form-control, .form-select {
-            border-radius: 6px;
-            border: 1px solid #ced4da;
-            padding: 0.5rem 0.75rem;
-            transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-        }
-        .form-control:focus, .form-select:focus {
-            border-color: #86b7fe;
-            box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
-        }
-    </style>
 
     <th:block layout:fragment="css"></th:block>
 </head>
 
-<body>
+<body class="admin-shell">
 
     <!-- 1. 사이드바 -->
     <div th:replace="~{fragments/sidebar :: sidebar}"></div>
@@ -234,16 +89,20 @@
         document.addEventListener('DOMContentLoaded', function () {
             const toggleBtn = document.getElementById('sidebarToggleBtn');
             const sidebar   = document.getElementById('sidebar');
-            const iconPath  = document.getElementById('toggleIconPath');
-
-            const ICON_COLLAPSE = 'M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z'; // ◀
-            const ICON_EXPAND   = 'M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6z';  // ▶
 
             if (toggleBtn && sidebar) {
                 toggleBtn.addEventListener('click', function () {
                     sidebar.classList.toggle('collapsed');
                     const isCollapsed = sidebar.classList.contains('collapsed');
-                    if (iconPath) iconPath.setAttribute('d', isCollapsed ? ICON_EXPAND : ICON_COLLAPSE);
+                    const toggleIcon = document.getElementById('toggleIcon');
+                    if (toggleIcon) {
+                        toggleIcon.setAttribute('data-lucide', isCollapsed ? 'panel-left-open' : 'panel-left-close');
+                    }
+                    if (typeof CommonUtils !== 'undefined') {
+                        CommonUtils.refreshIcons();
+                    } else if (window.lucide) {
+                        window.lucide.createIcons();
+                    }
 
                     setTimeout(() => {
                         if (typeof grid !== 'undefined' && grid) grid.refreshLayout();

@@ -7,21 +7,21 @@ public final class MenuSqlTemplate {
     }
 
     public static String generate(ScaffoldModel model) {
-        String menuId = (model.moduleName() + "_" + model.domainId()).toUpperCase().replace("-", "_");
+        String menuId = model.menuId();
         String module = model.moduleName();
         String cls = model.domainClass();
         String domainId = model.domainId();
 
         return "-- ============================================================\n"
             + "-- 메뉴 등록 SQL ( " + model.domainName() + " )\n"
-            + "-- PARENT_MENU_ID는 실제 상위 메뉴 ID로 교체 후 실행한다.\n"
+            + "-- 폐쇄망 반입 전에는 parentMenuId/menuId/roleCode 값을 수동 확인한다.\n"
             + "-- ============================================================\n\n"
             + "INSERT INTO SMS.TB_MENU (\n"
             + "    MENU_ID, PARENT_MENU_ID, MENU_NM, MENU_URL,\n"
             + "    MENU_LEVEL, SORT_ORD, MENU_TYPE, DISPLAY_YN, USE_YN, SYSTEM_YN, REG_ID\n"
             + ") VALUES (\n"
-            + "    '" + menuId + "', '/* TODO: 상위 메뉴 ID */', '" + model.domainName() + "', '" + model.screenUrl() + "',\n"
-            + "    2, 99, 'M', 'Y', 'Y', 'N', 'SYSTEM'\n"
+            + "    '" + menuId + "', '" + model.parentMenuId() + "', '" + model.domainName() + "', '" + model.screenUrl() + "',\n"
+            + "    2, " + model.menuSortOrd() + ", 'M', 'Y', 'Y', 'N', 'SYSTEM'\n"
             + ");\n\n"
             + "INSERT INTO SMS.TB_MENU_AUTH (\n"
             + "    MENU_ID, ROLE_CD,\n"
@@ -29,7 +29,7 @@ public final class MenuSqlTemplate {
             + "    CAN_APPROVE, CAN_CANCEL, CAN_DOWNLOAD, CAN_MASK_VIEW,\n"
             + "    USE_YN, REG_ID\n"
             + ") VALUES (\n"
-            + "    '" + menuId + "', 'ROLE_ADMIN',\n"
+            + "    '" + menuId + "', '" + model.roleCode() + "',\n"
             + "    'Y', 'Y', 'Y', 'Y',\n"
             + "    'Y', 'Y', 'Y', 'Y',\n"
             + "    'Y', 'SYSTEM'\n"

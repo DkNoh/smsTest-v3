@@ -32,22 +32,33 @@ public final class UpdateRequestDtoTemplate {
           .append(" *       REG_ID/REG_DTTM, 시스템 필드, 권한 필드는 선언하지 않는다.\n")
           .append(" */\n")
           .append("@Data\n")
-          .append("public class ").append(model.domainClass()).append("UpdateRequestDTO {\n\n")
-          .append("    // TODO: PK 필드 (WHERE 조건). 실제 PK 컬럼명으로 교체한다\n")
-          .append("    private String id;\n\n");
+          .append("public class ").append(model.domainClass()).append("UpdateRequestDTO {\n\n");
 
-        for (String column : model.getColumns()) {
-            if (column.trim().isEmpty()) {
-                continue;
+        if (model.pkColumns().isEmpty()) {
+            sb.append("    // TODO: PK 필드 (WHERE 조건). 실제 PK 컬럼명으로 교체한다\n")
+              .append("    private String id;\n\n");
+        } else {
+            sb.append("    /** PK 필드 (WHERE 조건): ").append(String.join(", ", model.pkColumns())).append(" */\n");
+            for (String pkColumn : model.pkColumns()) {
+                sb.append("    private ").append(model.pkJavaType(pkColumn)).append(" ")
+                  .append(QueryColumnExtractor.toCamelCase(pkColumn)).append(";\n");
             }
-            String javaType = model.getTypeMap().getOrDefault(column, "String");
-            sb.append("    private ").append(javaType).append(" ")
-              .append(QueryColumnExtractor.toCamelCase(column.trim())).append(";\n");
+            sb.append("\n");
         }
 
-        sb.append("\n    /** 낙관적 잠금용. 조회 시점의 UPDATE_DTTM (hidden으로 받는다) */\n")
-          .append("    private String beforeUpdateDttm;\n")
-          .append("}\n");
+        for (ScaffoldModel.ColumnConfig column : model.columnConfigs()) {
+            if (!column.editable()) {
+                continue;
+            }
+            sb.append("    private ").append(column.javaType()).append(" ")
+              .append(column.fieldName()).append(";\n");
+        }
+
+        if (!model.lockColumn().isEmpty()) {
+            sb.append("\n    /** 낙관적 잠금용. 조회 시점의 ").append(model.lockColumn()).append(" (hidden으로 받는다) */\n")
+              .append("    private ").append(model.lockJavaType()).append(" ").append(model.beforeLockFieldName()).append(";\n");
+        }
+        sb.append("}\n");
         return sb.toString();
     }
 }

@@ -81,6 +81,7 @@ public class StaticMenuSource implements MenuSource {
         menus.add(menu("CAMPAIGN_ALIMTALK_HISTORY", "G_CAMPAIGN", "알림톡 발송이력조회", "/sms/campaign-alimtalk", 2, 110, MENU_TYPE_MENU));
 
         menus.add(menu("G_SYSTEM", null, "시스템관리", null, 1, 40, MENU_TYPE_GROUP));
+        menus.add(menu("SYSTEM_MENU_TREE", "G_SYSTEM", "메뉴 트리 확인", "/system/menu-tree", 2, 5, MENU_TYPE_MENU));
         menus.add(menu("SYSTEM_DEP", "G_SYSTEM", "부서관리", "/system/dept-manage", 2, 10, MENU_TYPE_MENU));
         menus.add(menu("SYSTEM_MESSAGE", "G_SYSTEM", "메시지 관리", "/system/message", 2, 20, MENU_TYPE_MENU));
         menus.add(menu("SYSTEM_KAKAO_TEMPLATE", "G_SYSTEM", "카카오템플릿관리", "/system/kakao-template", 2, 30, MENU_TYPE_MENU));
