@@ -2,7 +2,7 @@
 
 v2에 이미 구현되어 있는 스캐폴드 생성기 화면을 분석한 문서다. v3 Query Scaffold를 구현할 때 이 동작을 기준으로 설계한다.
 
-원본: `sms-project-v2/src/main/java/com/example/sms/controller/system/SystemScaffoldController.java` + `templates/system/scaffold.html`
+원본: `sms-project-v2/src/main/java/com/scbk/sms/controller/system/SystemScaffoldController.java` + `templates/system/scaffold.html`
 
 ## 접근/보호
 

@@ -1,7 +1,7 @@
 # Project Rules
 
 - 상세 설계 원문은 `docs/base/*.md`를 따른다.
-- 신규 코드는 `com.example.sms` 패키지 아래에 둔다.
+- 신규 코드는 `com.scbk.sms` 패키지 아래에 둔다.
 - 계층은 `controller -> service -> mapper interface -> mapper XML -> Oracle` 순서를 따른다.
 - Controller는 요청/응답과 화면 반환에 집중한다.
 - Service는 트랜잭션과 업무 규칙을 담당한다.

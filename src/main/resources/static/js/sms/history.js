@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const pageBuilder = new TuiPageBuilder({
         el: 'grid',
         apiUrl: '/sms/history/data',
-        searchInputs: ['sentAt', 'receiverNo', 'sendStatus', 'sendType'],
+        searchInputs: ['sendType', 'sendStatus', 'sentAt', 'receiverNo'],
         searchDefaults: {},
         rowHeaders: ['rowNum'],
         columns: [
@@ -14,8 +14,7 @@ document.addEventListener('DOMContentLoaded', function () {
             { header: 'SEND_TYPE', name: 'sendType', align: 'center', width: 150, editable: true },
             { header: 'SEND_STATUS', name: 'sendStatus', align: 'center', width: 150, editable: true },
             { header: 'RESULT_CD', name: 'resultCd', align: 'center', width: 150, editable: true },
-            { header: 'RESULT_MSG', name: 'resultMsg', align: 'center', width: 150, editable: true },
-            { header: 'UPD_DTTM', name: 'updDttm', align: 'center', width: 150, formatter: TuiCommon.fmt.date }
+            { header: 'RESULT_MSG', name: 'resultMsg', align: 'center', width: 150, editable: true }
         ],
         autoModal: true,
         autoModalTitle: '발송이력조회 상세',
@@ -23,9 +22,7 @@ document.addEventListener('DOMContentLoaded', function () {
             createUrl: '/sms/history/create',
             updateUrl: '/sms/history/update',
             deleteUrl: '/sms/history/delete',
-            pkFields: ['smsHistoryId'],
-            lockField: 'updDttm',
-            beforeLockField: 'beforeUpdDttm',
+            pkFields: ['smsHistoryId', 'requestId'],
             editable: true
         }
     });

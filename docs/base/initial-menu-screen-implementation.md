@@ -33,15 +33,15 @@ local 로그인 성공
 
 | 파일 | 내용 |
 |---|---|
-| `src/main/java/com/example/sms/service/menu/MenuSource.java` | 메뉴 트리/권한 source 공통 인터페이스 |
-| `src/main/java/com/example/sms/service/menu/StaticMenuSource.java` | v2 baseline 정적 메뉴/권한 |
-| `src/main/java/com/example/sms/service/menu/DbMenuSource.java` | DB 기반 메뉴/권한 조회 |
-| `src/main/java/com/example/sms/service/menu/MenuTreeBuilder.java` | flat 메뉴를 tree로 변환하고 부모 누락/중복 검증 |
-| `src/main/java/com/example/sms/service/menu/RoleProvider.java` | 역할 source 공통 인터페이스 |
-| `src/main/java/com/example/sms/service/menu/StaticRoleProvider.java` | local 임시 역할 부여 |
-| `src/main/java/com/example/sms/service/menu/DbRoleProvider.java` | DB 기반 역할 조회 |
-| `src/main/java/com/example/sms/service/menu/EmployeeRoleService.java` | RoleProvider 위임 및 빈 역할 검증 |
-| `src/main/java/com/example/sms/controller/HomeController.java` | 메뉴, profile, source 정보를 화면 모델에 전달 |
+| `src/main/java/com/scbk/sms/service/menu/MenuSource.java` | 메뉴 트리/권한 source 공통 인터페이스 |
+| `src/main/java/com/scbk/sms/service/menu/StaticMenuSource.java` | v2 baseline 정적 메뉴/권한 |
+| `src/main/java/com/scbk/sms/service/menu/DbMenuSource.java` | DB 기반 메뉴/권한 조회 |
+| `src/main/java/com/scbk/sms/service/menu/MenuTreeBuilder.java` | flat 메뉴를 tree로 변환하고 부모 누락/중복 검증 |
+| `src/main/java/com/scbk/sms/service/menu/RoleProvider.java` | 역할 source 공통 인터페이스 |
+| `src/main/java/com/scbk/sms/service/menu/StaticRoleProvider.java` | local 임시 역할 부여 |
+| `src/main/java/com/scbk/sms/service/menu/DbRoleProvider.java` | DB 기반 역할 조회 |
+| `src/main/java/com/scbk/sms/service/menu/EmployeeRoleService.java` | RoleProvider 위임 및 빈 역할 검증 |
+| `src/main/java/com/scbk/sms/controller/HomeController.java` | 메뉴, profile, source 정보를 화면 모델에 전달 |
 | `src/main/resources/templates/index.html` | 로그인 이후 초기 메뉴 화면 |
 | `src/main/resources/templates/login.html` | 로그인 화면 한글 문구 복구 |
 | `src/main/resources/static/css/app.css` | 초기 메뉴 화면 레이아웃 |

@@ -3,9 +3,9 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.example.sms.mapper.system.PrivacyAuditLogMapper">
+<mapper namespace="com.scbk.sms.mapper.system.PrivacyAuditLogMapper">
 
-    <insert id="insertAuditLog" parameterType="com.example.sms.vo.system.PrivacyAuditLogVO">
+    <insert id="insertAuditLog" parameterType="com.scbk.sms.vo.system.PrivacyAuditLogVO">
         INSERT INTO SMS.TB_PRIVACY_AUDIT_LOG (
             EMP_ID,
             DEP_ID,

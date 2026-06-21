@@ -91,4 +91,4 @@ mvn test                  PASS (8 tests: ApiResponse 2, PageRequestDTO 3, PageRe
 mvn -DskipTests package   PASS
 ```
 
-테스트는 `src/test/java/com/example/sms/dto/common/`에 있으며 페이지 계산과 보정 규칙을 고정한다.
+테스트는 `src/test/java/com/scbk/sms/dto/common/`에 있으며 페이지 계산과 보정 규칙을 고정한다.

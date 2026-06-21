@@ -22,7 +22,7 @@ scaffold 산출물에 테스트 2종이 포함된다 (총 11종).
 생성된 테스트는 골격이다. **`// TODO: 업무 규칙 테스트` 부분을 채우는 것이 사람/AI의 몫**이며,
 업무 규칙(상태 전이, 검증 조건, 마스킹)이 있는 화면은 TODO를 채우기 전까지 부분 완료다.
 
-## 2층 — 컨벤션 테스트 (`src/test/java/com/example/sms/ConventionTest.java`)
+## 2층 — 컨벤션 테스트 (`src/test/java/com/scbk/sms/ConventionTest.java`)
 
 소스 파일을 직접 스캔하므로 화면이 늘어나도 검증 범위가 자동으로 늘어난다.
 

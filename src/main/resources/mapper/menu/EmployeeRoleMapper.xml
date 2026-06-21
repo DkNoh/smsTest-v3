@@ -3,7 +3,7 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.example.sms.mapper.menu.EmployeeRoleMapper">
+<mapper namespace="com.scbk.sms.mapper.menu.EmployeeRoleMapper">
 
     <select id="selectRoleCodes" resultType="string">
         SELECT ER.ROLE_CD
