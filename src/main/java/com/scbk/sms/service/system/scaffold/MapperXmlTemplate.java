@@ -225,7 +225,7 @@ public final class MapperXmlTemplate {
         List<String> values = new ArrayList<>();
         for (ScaffoldModel.ColumnConfig column : editableColumns(model)) {
             columns.add(column.columnName());
-            values.add("#{" + column.fieldName() + "}");
+            values.add(bindParameter(column.fieldName(), column.javaType()));
         }
 
         if (hasColumn(model, "REG_DTTM")) {
@@ -254,7 +254,7 @@ public final class MapperXmlTemplate {
     private static String updateSetClause(ScaffoldModel model) {
         List<String> assignments = new ArrayList<>();
         for (ScaffoldModel.ColumnConfig column : editableColumns(model)) {
-            assignments.add(column.columnName() + " = #{" + column.fieldName() + "}");
+            assignments.add(column.columnName() + " = " + bindParameter(column.fieldName(), column.javaType()));
         }
         if (!model.lockColumn().isEmpty()) {
             assignments.add(model.lockColumn() + " = " + currentValueExpression(model, model.lockColumn()));
@@ -314,7 +314,9 @@ public final class MapperXmlTemplate {
             if (i > 0) {
                 sb.append("           AND ");
             }
-            sb.append(column).append(" = #{").append(QueryColumnExtractor.toCamelCase(column)).append("}\n");
+            sb.append(column).append(" = ")
+                .append(bindParameter(QueryColumnExtractor.toCamelCase(column), model.pkJavaType(column)))
+                .append("\n");
         }
         return sb.toString();
     }
@@ -343,6 +345,8 @@ public final class MapperXmlTemplate {
             case "LocalDate" -> "DATE";
             case "BigDecimal" -> "DECIMAL";
             case "Long", "Integer" -> "NUMERIC";
+            case "byte[]" -> "BINARY";
+            case "String" -> "VARCHAR";
             default -> "";
         };
         if (jdbcType.isEmpty()) {

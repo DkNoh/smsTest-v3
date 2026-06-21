@@ -87,33 +87,33 @@
             RESULT_CD,
             RESULT_MSG
         ) VALUES (
-            #{sentAt},
-            #{receiverNo},
-            #{senderNo},
-            #{sendType},
-            #{sendStatus},
-            #{resultCd},
-            #{resultMsg}
+            #{sentAt,jdbcType=TIMESTAMP},
+            #{receiverNo,jdbcType=VARCHAR},
+            #{senderNo,jdbcType=VARCHAR},
+            #{sendType,jdbcType=VARCHAR},
+            #{sendStatus,jdbcType=VARCHAR},
+            #{resultCd,jdbcType=VARCHAR},
+            #{resultMsg,jdbcType=VARCHAR}
         )
     </insert>
 
     <!-- update 기준: 수정 허용 컬럼만 SET하고, 잠금 컬럼을 지정한 경우 WHERE에 함께 둔다. -->
     <update id="update">
         UPDATE SMS.SMS_HISTORY
-           SET SENT_AT = #{sentAt},
-               RECEIVER_NO = #{receiverNo},
-               SENDER_NO = #{senderNo},
-               SEND_TYPE = #{sendType},
-               SEND_STATUS = #{sendStatus},
-               RESULT_CD = #{resultCd},
-               RESULT_MSG = #{resultMsg}
-         WHERE SMS_HISTORY_ID = #{smsHistoryId}
-           AND REQUEST_ID = #{requestId}
+           SET SENT_AT = #{sentAt,jdbcType=TIMESTAMP},
+               RECEIVER_NO = #{receiverNo,jdbcType=VARCHAR},
+               SENDER_NO = #{senderNo,jdbcType=VARCHAR},
+               SEND_TYPE = #{sendType,jdbcType=VARCHAR},
+               SEND_STATUS = #{sendStatus,jdbcType=VARCHAR},
+               RESULT_CD = #{resultCd,jdbcType=VARCHAR},
+               RESULT_MSG = #{resultMsg,jdbcType=VARCHAR}
+         WHERE SMS_HISTORY_ID = #{smsHistoryId,jdbcType=NUMERIC}
+           AND REQUEST_ID = #{requestId,jdbcType=VARCHAR}
     </update>
 
     <delete id="delete">
-        DELETE FROM SMS.SMS_HISTORY WHERE SMS_HISTORY_ID = #{smsHistoryId}
-           AND REQUEST_ID = #{requestId}
+        DELETE FROM SMS.SMS_HISTORY WHERE SMS_HISTORY_ID = #{smsHistoryId,jdbcType=NUMERIC}
+           AND REQUEST_ID = #{requestId,jdbcType=VARCHAR}
     </delete>
 
 </mapper>

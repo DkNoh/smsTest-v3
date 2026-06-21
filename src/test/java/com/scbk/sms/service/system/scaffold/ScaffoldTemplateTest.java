@@ -108,6 +108,7 @@ class ScaffoldTemplateTest {
         assertThat(xmlCode).contains("INSERT INTO SMS_HISTORY");
         assertThat(xmlCode).contains("UPDATE SMS_HISTORY");
         assertThat(xmlCode).contains("DELETE FROM SMS_HISTORY");
+        assertThat(xmlCode).contains("RECEIVER_NO = #{receiverNo,jdbcType=VARCHAR}");
         assertThat(xmlCode).doesNotContain("TODO: 테이블명");
     }
 
@@ -479,7 +480,7 @@ class ScaffoldTemplateTest {
         assertThat(updateDto).doesNotContain("private String beforeUpdateDttm;");
         assertThat(mapper).contains("int delete(@Param(\"smsHistoryId\") Long smsHistoryId);");
         assertThat(controller).contains("delete(@RequestParam Long smsHistoryId)");
-        assertThat(xml).contains("WHERE SMS_HISTORY_ID = #{smsHistoryId}");
+        assertThat(xml).contains("WHERE SMS_HISTORY_ID = #{smsHistoryId,jdbcType=NUMERIC}");
         assertThat(xml).contains("AND (UPD_DTTM = #{beforeUpdDttm,jdbcType=TIMESTAMP}");
         assertThat(serviceTest).contains("service.delete(1L)");
     }
@@ -505,8 +506,8 @@ class ScaffoldTemplateTest {
         assertThat(updateDto).contains("private String sendType;");
         assertThat(mapper).contains("int delete(@Param(\"smsHistoryId\") Long smsHistoryId, @Param(\"sendType\") String sendType);");
         assertThat(controller).contains("delete(@RequestParam Long smsHistoryId, @RequestParam String sendType)");
-        assertThat(xml).contains("WHERE SMS_HISTORY_ID = #{smsHistoryId}");
-        assertThat(xml).contains("AND SEND_TYPE = #{sendType}");
+        assertThat(xml).contains("WHERE SMS_HISTORY_ID = #{smsHistoryId,jdbcType=NUMERIC}");
+        assertThat(xml).contains("AND SEND_TYPE = #{sendType,jdbcType=VARCHAR}");
         assertThat(js).contains("pkFields: ['smsHistoryId', 'sendType']");
     }
 
@@ -586,12 +587,12 @@ class ScaffoldTemplateTest {
         assertThat(updateDto).doesNotContain("private String sendStatus;");
         assertThat(updateDto).doesNotContain("private LocalDateTime updDttm;");
 
-        assertThat(xml).contains("SEND_TYPE = #{sendType}");
-        assertThat(xml).contains("RECEIVER_NO = #{receiverNo}");
+        assertThat(xml).contains("SEND_TYPE = #{sendType,jdbcType=VARCHAR}");
+        assertThat(xml).contains("RECEIVER_NO = #{receiverNo,jdbcType=VARCHAR}");
         assertThat(xml).contains("INSERT INTO SMS_HISTORY");
         assertThat(xml).contains("SEND_TYPE");
-        assertThat(xml).contains("#{sendType}");
-        assertThat(xml).doesNotContain("               SEND_STATUS = #{sendStatus}");
+        assertThat(xml).contains("#{sendType,jdbcType=VARCHAR}");
+        assertThat(xml).doesNotContain("               SEND_STATUS = #{sendStatus,jdbcType=VARCHAR}");
         assertThat(xml).doesNotContain("UPD_DTTM = #{updDttm}");
 
         assertThat(js).contains("name: 'sendType', align: 'center', width: 120, editable: true");

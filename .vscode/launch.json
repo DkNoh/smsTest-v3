@@ -6,7 +6,7 @@
             "name": "SMS V3 Local",
             "request": "launch",
             "cwd": "${workspaceFolder}",
-            "mainClass": "com.example.sms.SmsV3Application",
+            "mainClass": "com.scbk.sms.SmsV3Application",
             "projectName": "sms-project-v3",
             "args": "",
             "vmArgs": "-Dstdout.encoding=UTF-8 -Dstderr.encoding=UTF-8",
