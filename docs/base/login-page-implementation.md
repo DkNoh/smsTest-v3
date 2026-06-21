@@ -32,10 +32,10 @@ POST /login empId=admin
 | `src/main/resources/application-local.yml` | local Oracle JDBC + ID-only 인증 |
 | `src/main/resources/application-dev.yml` | dev JDBC + LDAP placeholder |
 | `src/main/resources/application-prod.yml` | prod JNDI + LDAP placeholder |
-| `src/main/java/com/example/sms/config/SecurityConfig.java` | Spring Security 공통 필터 체인 |
-| `src/main/java/com/example/sms/auth/LocalIdOnlyAuthenticationProvider.java` | local ID-only 인증 Provider |
-| `src/main/java/com/example/sms/auth/ActiveEmployeeResolver.java` | `EMP_ID` 기준 활성 사용자 단건 검증 |
-| `src/main/java/com/example/sms/config/LdapAuthenticationConfig.java` | dev/prod LDAP Provider 골격 |
+| `src/main/java/com/scbk/sms/config/SecurityConfig.java` | Spring Security 공통 필터 체인 |
+| `src/main/java/com/scbk/sms/auth/LocalIdOnlyAuthenticationProvider.java` | local ID-only 인증 Provider |
+| `src/main/java/com/scbk/sms/auth/ActiveEmployeeResolver.java` | `EMP_ID` 기준 활성 사용자 단건 검증 |
+| `src/main/java/com/scbk/sms/config/LdapAuthenticationConfig.java` | dev/prod LDAP Provider 골격 |
 | `src/main/resources/mapper/auth/LoginEmployeeMapper.xml` | `SMS.EMP`, `SMS.DEP` 조회 SQL |
 | `src/main/resources/templates/login.html` | 로그인 화면 |
 | `src/main/resources/templates/index.html` | 로그인 후 확인 화면 |

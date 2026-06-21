@@ -3,10 +3,10 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.example.sms.mapper.menu.MenuAuthMapper">
+<mapper namespace="com.scbk.sms.mapper.menu.MenuAuthMapper">
 
     <!-- URL 기준 메뉴 권한 조회. 역할이 여러 건이면 MAX 집계로 'Y' 우선 합산한다. -->
-    <select id="selectMenuPermissions" resultType="com.example.sms.vo.menu.MenuAuthVO">
+    <select id="selectMenuPermissions" resultType="com.scbk.sms.vo.menu.MenuAuthVO">
         SELECT
             MAX(MA.CAN_READ) AS can_read,
             MAX(MA.CAN_CREATE) AS can_create,

@@ -51,14 +51,14 @@ DB 문법은 자동 fallback하지 않고 `application.yml`의 `sms.scaffold.db-
 
 | 산출물 | 적용 경로 |
 |---|---|
-| `*SearchRequestDTO.java`, `*UpdateRequestDTO.java` | `src/main/java/com/example/sms/dto/{moduleName}/` |
-| `*VO.java` | `src/main/java/com/example/sms/vo/{moduleName}/` |
-| `*Mapper.java` | `src/main/java/com/example/sms/mapper/{moduleName}/` |
+| `*SearchRequestDTO.java`, `*UpdateRequestDTO.java` | `src/main/java/com/scbk/sms/dto/{moduleName}/` |
+| `*VO.java` | `src/main/java/com/scbk/sms/vo/{moduleName}/` |
+| `*Mapper.java` | `src/main/java/com/scbk/sms/mapper/{moduleName}/` |
 | `*Mapper.xml` | `src/main/resources/mapper/{moduleName}/` |
-| `*Service.java` | `src/main/java/com/example/sms/service/{moduleName}/` |
-| `*Controller.java` | `src/main/java/com/example/sms/controller/{moduleName}/` |
-| `*ServiceTest.java` | `src/test/java/com/example/sms/service/{moduleName}/` |
-| `*ControllerTest.java` | `src/test/java/com/example/sms/controller/{moduleName}/` |
+| `*Service.java` | `src/main/java/com/scbk/sms/service/{moduleName}/` |
+| `*Controller.java` | `src/main/java/com/scbk/sms/controller/{moduleName}/` |
+| `*ServiceTest.java` | `src/test/java/com/scbk/sms/service/{moduleName}/` |
+| `*ControllerTest.java` | `src/test/java/com/scbk/sms/controller/{moduleName}/` |
 | `{domainId}.html` | `src/main/resources/templates/{moduleName}/` |
 | `{domainId}.js` | `src/main/resources/static/js/{moduleName}/` |
 | `메뉴등록.sql` | `db/oracle/{moduleName}_{domainId}_menu_seed.sql` |

@@ -10,7 +10,7 @@
     "files.encoding": "utf8",
     "java.compile.nullAnalysis.mode": "automatic",
     "java.server.launchMode": "Standard",
-    "java.configuration.updateBuildConfiguration": "manual",
+    "java.configuration.updateBuildConfiguration": "interactive",
     "java.autobuild.enabled": false,
     "files.watcherExclude": {
         "**/target/**": true

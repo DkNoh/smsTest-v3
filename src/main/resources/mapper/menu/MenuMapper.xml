@@ -3,9 +3,9 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.example.sms.mapper.menu.MenuMapper">
+<mapper namespace="com.scbk.sms.mapper.menu.MenuMapper">
 
-    <select id="selectReadableMenus" resultType="com.example.sms.vo.menu.MenuItemVO">
+    <select id="selectReadableMenus" resultType="com.scbk.sms.vo.menu.MenuItemVO">
         SELECT DISTINCT
             M.MENU_ID AS menu_id,
             M.PARENT_MENU_ID AS parent_menu_id,
