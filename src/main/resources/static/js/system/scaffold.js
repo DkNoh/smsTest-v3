@@ -352,7 +352,8 @@ document.addEventListener('DOMContentLoaded', function () {
         const domainId = document.querySelector('#domainId').value.trim();
         const menuId = document.querySelector('#menuId');
         if (!menuId.value && moduleName && domainId) {
-            menuId.value = `${moduleName}_${domainId}`.toUpperCase().replace(/-/g, '_');
+            // 백엔드 ScaffoldModel.menuId()와 동일 규약: 하이픈/슬래시 모두 밑줄로 치환한다.
+            menuId.value = `${moduleName}_${domainId}`.toUpperCase().replace(/[-/]/g, '_');
         }
         if (!document.querySelector('#roleCode').value) {
             document.querySelector('#roleCode').value = 'ROLE_ADMIN';

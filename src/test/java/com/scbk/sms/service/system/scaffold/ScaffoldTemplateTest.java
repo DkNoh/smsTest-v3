@@ -151,6 +151,33 @@ class ScaffoldTemplateTest {
     }
 
     @Test
+    void domainId에_슬래시가_있으면_v2의_3단계_URL을_그대로_재현한다() {
+        // given : v2 baseline의 /campaign/sms/register 같은 3단계 경로
+        ScaffoldRequestDTO request = new ScaffoldRequestDTO();
+        request.setModuleName("campaign");
+        request.setDomainId("sms/register");
+        request.setDomainClass("CampaignSmsRegister");
+        request.setDomainName("SMS등록");
+        request.setRawQuery("SELECT A.REG_ID FROM SMS.CAMPAIGN_SMS A WHERE 1=1");
+        request.setOrderBy("A.REG_ID DESC");
+        ScaffoldModel model = new ScaffoldModel(request,
+            List.of("REG_ID"),
+            List.of(),
+            Map.of("REG_ID", "String"));
+
+        // when
+        String controllerCode = ControllerTemplate.generate(model);
+        String htmlCode = HtmlTemplate.generate(model);
+
+        // then : screenUrl/menuId/뷰 이름/JS 경로 모두 3단계 경로를 유지한다
+        assertThat(model.screenUrl()).isEqualTo("/campaign/sms/register");
+        assertThat(model.menuId()).isEqualTo("CAMPAIGN_SMS_REGISTER");
+        assertThat(controllerCode).contains("@RequestMapping(\"/campaign/sms/register\")");
+        assertThat(controllerCode).contains("return \"campaign/sms/register\";");
+        assertThat(htmlCode).contains("/js/campaign/sms/register.js");
+    }
+
+    @Test
     void ServiceTest는_Mockito_mock과_given_when_then으로_생성한다() {
         // when
         String code = ServiceTestTemplate.generate(model(true, false, false));

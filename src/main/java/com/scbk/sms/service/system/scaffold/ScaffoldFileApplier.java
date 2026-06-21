@@ -23,7 +23,8 @@ import org.springframework.util.StringUtils;
 public class ScaffoldFileApplier {
 
     private static final Pattern MODULE_PATTERN = Pattern.compile("^[a-z][a-z0-9]*$");
-    private static final Pattern DOMAIN_ID_PATTERN = Pattern.compile("^[a-z][a-z0-9-]*$");
+    // ScaffoldRequestDTO와 동일 규약: v2 baseline 3단계 URL 재현을 위해 내부 슬래시 1개까지 허용한다.
+    private static final Pattern DOMAIN_ID_PATTERN = Pattern.compile("^[a-z][a-z0-9-]*(/[a-z][a-z0-9-]*)?$");
     private static final Pattern DOMAIN_CLASS_PATTERN = Pattern.compile("^[A-Z][A-Za-z0-9]*$");
     private static final char WINDOWS_PATH_SEPARATOR = '\\';
     private static final char DISPLAY_PATH_SEPARATOR = '/';

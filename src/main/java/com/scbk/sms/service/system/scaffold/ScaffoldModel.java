@@ -280,7 +280,7 @@ public class ScaffoldModel {
         if (menuOption != null && StringUtils.hasText(menuOption.getMenuId())) {
             return menuOption.getMenuId().trim().toUpperCase();
         }
-        return (moduleName() + "_" + domainId()).toUpperCase().replace("-", "_");
+        return (moduleName() + "_" + domainId()).toUpperCase().replace("-", "_").replace("/", "_");
     }
 
     public String parentMenuId() {

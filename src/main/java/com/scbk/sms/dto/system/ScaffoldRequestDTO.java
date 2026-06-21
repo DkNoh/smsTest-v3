@@ -15,8 +15,10 @@ public class ScaffoldRequestDTO {
     @Pattern(regexp = "^[a-z][a-z0-9]*$", message = "moduleName은 영문 소문자와 숫자만 사용할 수 있습니다.")
     private String moduleName;
 
+    // v2 baseline 중 3단계 URL(예: /campaign/sms/register)을 그대로 재현하기 위해 내부 슬래시 1개까지 허용한다.
     @NotBlank(message = "domainId는 필수입니다.")
-    @Pattern(regexp = "^[a-z][a-z0-9-]*$", message = "domainId는 영문 소문자, 숫자, 하이픈만 사용할 수 있습니다.")
+    @Pattern(regexp = "^[a-z][a-z0-9-]*(/[a-z][a-z0-9-]*)?$",
+        message = "domainId는 영문 소문자, 숫자, 하이픈만 사용할 수 있고 내부 슬래시는 1개까지 허용합니다.")
     private String domainId;
 
     @NotBlank(message = "domainClass는 필수입니다.")

@@ -106,6 +106,30 @@ class ScaffoldFileApplierTest {
     }
 
     @Test
+    void domainId의_슬래시는_html_js_경로를_한_단계_더_깊게_만든다() throws Exception {
+        // given : v2 baseline의 /campaign/sms/register 같은 3단계 경로
+        ScaffoldRequestDTO request = request("campaign", "sms/register", "CampaignSmsRegister");
+        Map<String, String> generatedFiles = Map.of(
+            "sms/register.html", "html",
+            "sms/register.js", "js"
+        );
+        ScaffoldFileApplier applier = new ScaffoldFileApplier(tempDir);
+
+        // when
+        List<ScaffoldApplyFileResultDTO> appliedFiles = applier.apply(request, generatedFiles);
+        Map<String, String> appliedPaths = pathMap(appliedFiles);
+
+        // then
+        assertThat(appliedPaths)
+            .containsEntry("sms/register.html",
+                "src/main/resources/templates/campaign/sms/register.html")
+            .containsEntry("sms/register.js",
+                "src/main/resources/static/js/campaign/sms/register.js");
+        assertThat(Files.readString(tempDir.resolve(
+            "src/main/resources/templates/campaign/sms/register.html"))).isEqualTo("html");
+    }
+
+    @Test
     void 경로로_쓸_수_없는_입력은_거부한다() {
         // given
         ScaffoldRequestDTO request = request("../sms", "history", "SmsHistory");
