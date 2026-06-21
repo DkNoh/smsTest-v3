@@ -177,6 +177,38 @@ class ScaffoldTemplateTest {
     }
 
     @Test
+    void ControllerTest는_LIST_화면이면_create_update_delete_테스트를_만들지_않는다() {
+        // when
+        String code = ControllerTestTemplate.generate(model(false, false, false));
+
+        // then : CUD가 없는 화면은 create/update/delete 엔드포인트도, then(service) 검증도 없다
+        assertThat(code).doesNotContain("/create");
+        assertThat(code).doesNotContain("/update");
+        assertThat(code).doesNotContain("/delete");
+        assertThat(code).doesNotContain("then(service)");
+    }
+
+    @Test
+    void ControllerTest는_CRUD이면_create_update_delete_성공_메시지를_검증한다() {
+        // when
+        String code = ControllerTestTemplate.generate(model(true, false, false));
+
+        // then : 성공 메시지는 ApiResponse.data가 아니라 message 필드에 담긴다
+        assertThat(code).contains("post(\"/sms/history/create\")");
+        assertThat(code).contains("jsonPath(\"$.message\").value(\"등록되었습니다.\")");
+        assertThat(code).contains("then(service).should().create(any())");
+
+        assertThat(code).contains("post(\"/sms/history/update\")");
+        assertThat(code).contains("jsonPath(\"$.message\").value(\"수정되었습니다.\")");
+        assertThat(code).contains("then(service).should().update(any())");
+
+        assertThat(code).contains("post(\"/sms/history/delete\")");
+        assertThat(code).contains(".param(\"receiverNo\", \"1\")");
+        assertThat(code).contains("jsonPath(\"$.message\").value(\"삭제되었습니다.\")");
+        assertThat(code).contains("then(service).should().delete(\"1\")");
+    }
+
+    @Test
     void HTML은_screen_convention_골격을_따른다() {
         // when
         String html = HtmlTemplate.generate(model(false, true, false));

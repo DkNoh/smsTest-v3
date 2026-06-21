@@ -83,13 +83,14 @@ public final class ServiceTestTemplate {
         return sb.toString();
     }
 
-    private static String samplePkArgs(ScaffoldModel model) {
+    // ControllerTestTemplate도 동일한 PK 샘플값을 써야 해서 package-private로 공유한다.
+    static String samplePkArgs(ScaffoldModel model) {
         return model.pkColumns().stream()
             .map(pkColumn -> sampleValue(model.pkJavaType(pkColumn)))
             .collect(java.util.stream.Collectors.joining(", "));
     }
 
-    private static String sampleValue(String javaType) {
+    static String sampleValue(String javaType) {
         // Mockito 검증을 위해 두 번 평가해도 동일한(equals) 안정적 리터럴을 쓴다. now()는 금지.
         return switch (javaType) {
             case "Integer" -> "1";
@@ -98,6 +99,15 @@ public final class ServiceTestTemplate {
             case "LocalDateTime" -> "java.time.LocalDateTime.of(2020, 1, 1, 0, 0)";
             case "BigDecimal" -> "java.math.BigDecimal.ONE";
             default -> "\"1\"";
+        };
+    }
+
+    /** MockMvc .param() 등 HTTP 요청 파라미터 문자열 값. sampleValue()와 같은 값을 문자열 표현으로 맞춘다. */
+    static String sampleParamValue(String javaType) {
+        return switch (javaType) {
+            case "LocalDate" -> "2020-01-01";
+            case "LocalDateTime" -> "2020-01-01T00:00:00";
+            default -> "1";
         };
     }
 }

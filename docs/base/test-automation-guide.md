@@ -17,7 +17,7 @@ scaffold 산출물에 테스트 2종이 포함된다 (총 11종).
 | 산출물 | 검증 내용 |
 |---|---|
 | `{Domain}ServiceTest.java` | Mapper를 Mockito mock 처리. `search()`가 count/selectList를 호출하고 `PageResponseDTO`로 감싸는지. CUD 옵션 시 위임 검증 추가 |
-| `{Domain}ControllerTest.java` | standalone MockMvc로 `/data` 호출 → 200 + `ApiResponse` 포맷(`$.code`, `$.data.totalCount`) 검증 |
+| `{Domain}ControllerTest.java` | standalone MockMvc로 `/data` 호출 → 200 + `ApiResponse` 포맷(`$.code`, `$.data.totalCount`) 검증. CRUD 옵션 시 `/create`, `/update`, `/delete`까지 함께 생성 — 200 + 성공 메시지(`$.message`, 예: "등록되었습니다.")와 Service 위임(`then(service).should()...`) 검증 |
 
 생성된 테스트는 골격이다. **`// TODO: 업무 규칙 테스트` 부분을 채우는 것이 사람/AI의 몫**이며,
 업무 규칙(상태 전이, 검증 조건, 마스킹)이 있는 화면은 TODO를 채우기 전까지 부분 완료다.
