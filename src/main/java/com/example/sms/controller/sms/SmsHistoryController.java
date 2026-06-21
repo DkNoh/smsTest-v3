@@ -53,8 +53,8 @@ public class SmsHistoryController {
 
     @ResponseBody
     @PostMapping("/delete")
-    public ResponseEntity<ApiResponse<String>> delete(@RequestParam Integer smsHistoryId) {
-        service.delete(smsHistoryId);
+    public ResponseEntity<ApiResponse<String>> delete(@RequestParam Integer smsHistoryId, @RequestParam String requestId) {
+        service.delete(smsHistoryId, requestId);
         return ResponseEntity.ok(ApiResponse.success("삭제되었습니다.", null));
     }
 }

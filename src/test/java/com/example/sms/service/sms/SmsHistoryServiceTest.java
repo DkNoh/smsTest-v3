@@ -62,10 +62,10 @@ class SmsHistoryServiceTest {
     @Test
     void 삭제는_Mapper에_위임한다() {
         // when
-        service.delete(1);
+        service.delete(1, "1");
 
         // then
-        then(mapper).should().delete(1);
+        then(mapper).should().delete(1, "1");
     }
 
     // TODO: 업무 규칙 테스트를 추가한다 (검증 조건, 상태 전이, 마스킹 등)

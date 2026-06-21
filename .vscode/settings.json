@@ -9,5 +9,14 @@
     "terminal.integrated.defaultProfile.windows": "PowerShell (UTF-8)",
     "files.encoding": "utf8",
     "java.compile.nullAnalysis.mode": "automatic",
-    "java.configuration.updateBuildConfiguration": "automatic"
+    "java.server.launchMode": "Standard",
+    "java.configuration.updateBuildConfiguration": "manual",
+    "java.autobuild.enabled": false,
+    "files.watcherExclude": {
+        "**/target/**": true
+    },
+    "search.exclude": {
+        "**/target": true
+    },
+    "java.jdt.ls.vmargs": "-XX:+UseParallelGC -XX:GCTimeRatio=4 -XX:AdaptiveSizePolicyWeight=90 -Dsun.zip.disableMemoryMapping=true -Xmx4G -Xms100m -Xlog:disable"
 }

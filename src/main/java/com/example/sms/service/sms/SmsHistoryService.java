@@ -41,7 +41,7 @@ public class SmsHistoryService {
     }
 
     @Transactional
-    public void delete(Integer smsHistoryId) {
-        mapper.delete(smsHistoryId);
+    public void delete(Integer smsHistoryId, String requestId) {
+        mapper.delete(smsHistoryId, requestId);
     }
 }
