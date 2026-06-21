@@ -146,8 +146,8 @@ public class ScaffoldService {
             if (!metadata.nullableByColumn().containsKey(lockColumn)) {
                 throw new IllegalStateException("Lock column does not exist in target table: " + lockColumn);
             }
-            if (metadata.isNullable(lockColumn)) {
-                throw new IllegalStateException("Optimistic lock column must be NOT NULL: " + lockColumn);
+            if (pkColumns.contains(lockColumn)) {
+                throw new IllegalStateException("Optimistic lock column must not be a PK column: " + lockColumn);
             }
         }
     }

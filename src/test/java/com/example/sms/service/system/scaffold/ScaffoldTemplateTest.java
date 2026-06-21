@@ -1,6 +1,7 @@
 package com.example.sms.service.system.scaffold;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.example.sms.dto.system.ScaffoldColumnOptionDTO;
 import com.example.sms.dto.system.ScaffoldMenuOptionDTO;
@@ -479,7 +480,7 @@ class ScaffoldTemplateTest {
         assertThat(mapper).contains("int delete(@Param(\"smsHistoryId\") Long smsHistoryId);");
         assertThat(controller).contains("delete(@RequestParam Long smsHistoryId)");
         assertThat(xml).contains("WHERE SMS_HISTORY_ID = #{smsHistoryId}");
-        assertThat(xml).contains("AND UPD_DTTM = #{beforeUpdDttm}");
+        assertThat(xml).contains("AND (UPD_DTTM = #{beforeUpdDttm,jdbcType=TIMESTAMP}");
         assertThat(serviceTest).contains("service.delete(1L)");
     }
 
@@ -507,6 +508,21 @@ class ScaffoldTemplateTest {
         assertThat(xml).contains("WHERE SMS_HISTORY_ID = #{smsHistoryId}");
         assertThat(xml).contains("AND SEND_TYPE = #{sendType}");
         assertThat(js).contains("pkFields: ['smsHistoryId', 'sendType']");
+    }
+
+    @Test
+    void 낙관적_잠금_컬럼은_PK로_선택할_수_없다() {
+        // given
+        ScaffoldRequestDTO request = requestWithOptions();
+        request.setScreenMode("CRUD");
+        request.setPkColumn("SMS_HISTORY_ID");
+        request.setLockColumn("SMS_HISTORY_ID");
+        ScaffoldModel optionModel = optionModel(request);
+
+        // when / then
+        assertThatThrownBy(() -> MapperXmlTemplate.generate(optionModel))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessageContaining("must not be a PK column");
     }
 
     @Test

@@ -86,7 +86,7 @@ DB 문법은 자동 fallback하지 않고 `application.yml`의 `sms.scaffold.db-
 - 상세 모달은 `TuiPageBuilder.autoModal` 공통 기능을 사용한다. CRUD 모드에서는 같은 모달 footer에 수정/삭제 버튼을 생성하고 `/update`, `/delete` endpoint를 호출한다. 실제 권한 판정은 기존 `MenuAuthInterceptor`의 URL suffix 권한 규칙을 따른다.
 - CRUD 모드는 실제 DB 메타데이터의 PK를 기본값으로 사용한다. 단일 PK와 복합 PK를 모두 `pkColumns`로 다루며, 조회 SQL 결과에 모든 PK 컬럼이 없으면 생성을 막는다.
 - PK가 없는 테이블은 CRUD 생성을 막고 LIST/EXCEL/DETAIL 조회 전용만 허용한다. 임의 `_ID` 컬럼을 PK처럼 추정하지 않는다.
-- 선택한 `lockColumn`은 낙관적 잠금 조건으로 사용한다. 조회 SQL 결과에 포함되어야 하며, targetTable 메타데이터 기준 NOT NULL 컬럼이어야 한다.
+- 선택한 `lockColumn`은 낙관적 잠금 조건으로 사용한다. 조회 SQL 결과와 targetTable 메타데이터에 포함되어야 하며, PK 컬럼은 lockColumn으로 선택할 수 없다. nullable 컬럼은 null-safe WHERE 조건으로 생성한다.
 - CRUD 모드의 수정 요청은 **화이트리스트 원칙을 유지한다.** `*UpdateRequestDTO`는 `pkColumns`, `before{LockColumn}`, `editable=true` 컬럼만 선언한다. VO 전체 컬럼이나 모달에 표시된 전체 컬럼을 update 요청 DTO로 사용하지 않는다.
 - CRUD 모드의 프론트 update payload도 `editable=true` 컬럼만 전송한다. 서버 DTO 화이트리스트가 최종 방어선이지만, 프론트에서도 불필요한 읽기전용/시스템 컬럼을 보내지 않는다.
 - Mapper XML의 `UPDATE SET`도 `editable=true` 컬럼만 생성한다. `REG_ID`, `REG_DTTM`, PK, 권한/소유자/감사 컬럼은 기본적으로 editable 대상에서 제외한다.

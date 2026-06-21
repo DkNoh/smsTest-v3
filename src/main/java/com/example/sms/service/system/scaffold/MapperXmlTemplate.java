@@ -25,6 +25,7 @@ public final class MapperXmlTemplate {
         if (model.includeCreateUpdate() && targetTable.isEmpty()) {
             throw new IllegalStateException("CRUD 모드는 targetTable이 필요합니다. 조회 SQL의 FROM 테이블을 추론할 수 없으면 수정 대상 테이블을 입력하세요.");
         }
+        validateCrudModel(model);
 
         StringBuilder sb = new StringBuilder();
         sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n")
@@ -322,6 +323,31 @@ public final class MapperXmlTemplate {
         if (model.lockColumn().isEmpty()) {
             return "";
         }
-        return "           AND " + model.lockColumn() + " = #{" + model.beforeLockFieldName() + "}\n";
+        String beforeValue = bindParameter(model.beforeLockFieldName(), model.lockJavaType());
+        return "           AND (" + model.lockColumn() + " = " + beforeValue + "\n"
+            + "                OR (" + model.lockColumn() + " IS NULL AND " + beforeValue + " IS NULL))\n";
+    }
+
+    private static void validateCrudModel(ScaffoldModel model) {
+        if (!model.includeCreateUpdate() || model.lockColumn().isEmpty()) {
+            return;
+        }
+        if (model.pkColumns().contains(model.lockColumn())) {
+            throw new IllegalStateException("Optimistic lock column must not be a PK column: " + model.lockColumn());
+        }
+    }
+
+    private static String bindParameter(String fieldName, String javaType) {
+        String jdbcType = switch (javaType) {
+            case "LocalDateTime" -> "TIMESTAMP";
+            case "LocalDate" -> "DATE";
+            case "BigDecimal" -> "DECIMAL";
+            case "Long", "Integer" -> "NUMERIC";
+            default -> "";
+        };
+        if (jdbcType.isEmpty()) {
+            return "#{" + fieldName + "}";
+        }
+        return "#{" + fieldName + ",jdbcType=" + jdbcType + "}";
     }
 }

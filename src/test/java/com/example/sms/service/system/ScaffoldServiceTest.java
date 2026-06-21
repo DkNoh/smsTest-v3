@@ -1,5 +1,6 @@
 package com.example.sms.service.system;
 
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -57,15 +58,28 @@ class ScaffoldServiceTest {
     }
 
     @Test
-    void 낙관적_잠금_컬럼이_nullable이면_생성을_막는다() {
+    void nullable_낙관적_잠금_컬럼도_null_safe_WHERE로_생성할_수_있다() {
         // given
         given(metadataReader.read("SMS.SMS_HISTORY"))
             .willReturn(new ScaffoldTableMetadata(List.of("SMS_HISTORY_ID"), nullableMap(true)));
 
         // when / then
-        assertThatThrownBy(() -> service.generate(request()))
+        assertThatCode(() -> service.generate(request()))
+            .doesNotThrowAnyException();
+    }
+
+    @Test
+    void 낙관적_잠금_컬럼은_PK로_선택할_수_없다() {
+        // given
+        given(metadataReader.read("SMS.SMS_HISTORY"))
+            .willReturn(new ScaffoldTableMetadata(List.of("SMS_HISTORY_ID"), nullableMap(false)));
+        ScaffoldRequestDTO request = request();
+        request.setLockColumn("SMS_HISTORY_ID");
+
+        // when / then
+        assertThatThrownBy(() -> service.generate(request))
             .isInstanceOf(IllegalStateException.class)
-            .hasMessageContaining("Optimistic lock column must be NOT NULL");
+            .hasMessageContaining("must not be a PK column");
     }
 
     private ScaffoldRequestDTO request() {

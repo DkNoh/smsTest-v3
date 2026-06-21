@@ -81,6 +81,7 @@
 
     <insert id="insert">
         INSERT INTO SMS.SMS_HISTORY (
+            REQUEST_ID,
             SENT_AT,
             RECEIVER_NO,
             SENDER_NO,
@@ -88,15 +89,18 @@
             SEND_STATUS,
             RESULT_CD,
             RESULT_MSG,
-            SMS_HISTORY_ID
+            REG_ID,
+            UPD_DTTM
         ) VALUES (
-            #{sentAt},
-            #{receiverNo},
-            #{senderNo},
-            #{sendType},
-            #{sendStatus},
-            #{resultCd},
-            #{resultMsg},
+            'REQ' || TO_CHAR(SYSTIMESTAMP, 'YYYYMMDDHH24MISSFF3') || SUBSTR(RAWTOHEX(SYS_GUID()), 1, 8),
+            #{sentAt,jdbcType=TIMESTAMP},
+            #{receiverNo,jdbcType=VARCHAR},
+            #{senderNo,jdbcType=VARCHAR},
+            #{sendType,jdbcType=VARCHAR},
+            NVL(#{sendStatus,jdbcType=VARCHAR}, 'SENT'),
+            #{resultCd,jdbcType=VARCHAR},
+            #{resultMsg,jdbcType=VARCHAR},
+            'LOCAL',
             SYSTIMESTAMP
         )
     </insert>
@@ -104,16 +108,18 @@
     <!-- update 기준: 수정 허용 컬럼만 SET하고, 잠금 컬럼을 지정한 경우 WHERE에 함께 둔다. -->
     <update id="update">
         UPDATE SMS.SMS_HISTORY
-           SET SENT_AT = #{sentAt},
-               RECEIVER_NO = #{receiverNo},
-               SENDER_NO = #{senderNo},
-               SEND_TYPE = #{sendType},
-               SEND_STATUS = #{sendStatus},
-               RESULT_CD = #{resultCd},
-               RESULT_MSG = #{resultMsg},
-               SMS_HISTORY_ID = SYSTIMESTAMP
+           SET SENT_AT = #{sentAt,jdbcType=TIMESTAMP},
+               RECEIVER_NO = #{receiverNo,jdbcType=VARCHAR},
+               SENDER_NO = #{senderNo,jdbcType=VARCHAR},
+               SEND_TYPE = #{sendType,jdbcType=VARCHAR},
+               SEND_STATUS = #{sendStatus,jdbcType=VARCHAR},
+               RESULT_CD = #{resultCd,jdbcType=VARCHAR},
+               RESULT_MSG = #{resultMsg,jdbcType=VARCHAR},
+               UPD_ID = 'LOCAL',
+               UPD_DTTM = SYSTIMESTAMP
          WHERE SMS_HISTORY_ID = #{smsHistoryId}
-           AND SMS_HISTORY_ID = #{beforeSmsHistoryId}
+           AND (UPD_DTTM = #{beforeUpdDttm,jdbcType=TIMESTAMP}
+                OR (UPD_DTTM IS NULL AND #{beforeUpdDttm,jdbcType=TIMESTAMP} IS NULL))
     </update>
 
     <delete id="delete">

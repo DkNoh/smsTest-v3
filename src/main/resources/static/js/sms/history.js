@@ -24,8 +24,8 @@ document.addEventListener('DOMContentLoaded', function () {
             updateUrl: '/sms/history/update',
             deleteUrl: '/sms/history/delete',
             pkFields: ['smsHistoryId'],
-            lockField: 'smsHistoryId',
-            beforeLockField: 'beforeSmsHistoryId',
+            lockField: 'updDttm',
+            beforeLockField: 'beforeUpdDttm',
             editable: true
         }
     });

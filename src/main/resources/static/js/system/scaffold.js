@@ -331,10 +331,13 @@ document.addEventListener('DOMContentLoaded', function () {
         const lockSelect = document.querySelector('#lockColumn');
         const prevPk = selectedValues(pkSelect);
         const prevLock = lockSelect.value;
+        const selectedPkColumns = prevPk.length > 0 ? prevPk : pkColumns;
+        const pkSet = new Set((selectedPkColumns || []).map(col => String(col).toUpperCase()));
+        const lockColumns = columns.filter(col => !pkSet.has(String(col).toUpperCase()));
         pkSelect.innerHTML = columns.map(col => `<option value="${col}">${col}</option>`).join('');
-        lockSelect.innerHTML = '<option value="">선택 안 함</option>' + columns.map(col => `<option value="${col}">${col}</option>`).join('');
-        setSelectedValues(pkSelect, prevPk.length > 0 ? prevPk : pkColumns);
-        lockSelect.value = prevLock || guessLock(columns);
+        lockSelect.innerHTML = '<option value="">선택 안 함</option>' + lockColumns.map(col => `<option value="${col}">${col}</option>`).join('');
+        setSelectedValues(pkSelect, selectedPkColumns);
+        lockSelect.value = lockColumns.includes(prevLock) ? prevLock : guessLock(lockColumns);
     }
 
     function renderTargetTableDefault(targetTable) {
