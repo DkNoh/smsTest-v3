@@ -31,6 +31,9 @@ public final class ControllerTemplate {
         }
         if (model.includeCreateUpdate()) {
             sb.append("import jakarta.validation.Valid;\n");
+            for (String imp : model.pkParamImports()) {
+                sb.append(imp).append("\n");
+            }
         }
         sb.append("import lombok.RequiredArgsConstructor;\n")
           .append("import org.springframework.http.ResponseEntity;\n")
@@ -81,9 +84,8 @@ public final class ControllerTemplate {
               .append("    }\n\n")
               .append("    @ResponseBody\n")
               .append("    @PostMapping(\"/delete\")\n")
-              .append("    public ResponseEntity<ApiResponse<String>> delete(@RequestParam ")
-              .append(model.pkJavaType()).append(" ").append(model.pkFieldName()).append(") {\n")
-              .append("        service.delete(").append(model.pkFieldName()).append(");\n")
+              .append("    public ResponseEntity<ApiResponse<String>> delete(").append(deleteRequestParams(model)).append(") {\n")
+              .append("        service.delete(").append(String.join(", ", model.pkFieldNames())).append(");\n")
               .append("        return ResponseEntity.ok(ApiResponse.success(\"삭제되었습니다.\", null));\n")
               .append("    }\n");
         }
@@ -101,6 +103,19 @@ public final class ControllerTemplate {
         }
 
         sb.append("}\n");
+        return sb.toString();
+    }
+
+    private static String deleteRequestParams(ScaffoldModel model) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < model.pkColumns().size(); i++) {
+            String pkColumn = model.pkColumns().get(i);
+            if (i > 0) {
+                sb.append(", ");
+            }
+            sb.append("@RequestParam ").append(model.pkJavaType(pkColumn)).append(" ")
+              .append(QueryColumnExtractor.toCamelCase(pkColumn));
+        }
         return sb.toString();
     }
 }

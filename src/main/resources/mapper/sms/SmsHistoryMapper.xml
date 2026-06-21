@@ -28,18 +28,18 @@
                 A.RESULT_MSG AS RESULT_MSG,
                 A.UPD_DTTM AS UPD_DTTM
             FROM SMS.SMS_HISTORY A
-            WHERE 1=1
-                <if test="sendType != null and sendType != ''">
-                    AND A.SEND_TYPE = #{sendType}
+            WHERE 1 = 1
+                <if test="sentAt != null and sentAt != ''">
+                    AND A.SENT_AT <![CDATA[ >= ]]> TO_TIMESTAMP(#{sentAt} || '000000', 'YYYYMMDDHH24MISS') AND A.SENT_AT <![CDATA[ < ]]> TO_TIMESTAMP(#{sentAt} || '000000', 'YYYYMMDDHH24MISS') + INTERVAL '1' DAY
+                </if>
+                <if test="receiverNo != null and receiverNo != ''">
+                    AND A.RECEIVER_NO LIKE '%' || #{receiverNo} || '%'
                 </if>
                 <if test="sendStatus != null and sendStatus != ''">
                     AND A.SEND_STATUS = #{sendStatus}
                 </if>
-                <if test="sentAt != null and sentAt != ''">
-                    AND a.sent_at <![CDATA[ >= ]]> TO_TIMESTAMP(#{sentAt} || '000000', 'YYYYMMDDHH24MISS') AND a.sent_at <![CDATA[ < ]]> TO_TIMESTAMP(#{sentAt} || '000000', 'YYYYMMDDHH24MISS') + INTERVAL '1' DAY
-                </if>
-                <if test="receiverNo != null and receiverNo != ''">
-                    AND A.RECEIVER_NO LIKE '%' || #{receiverNo} || '%'
+                <if test="sendType != null and sendType != ''">
+                    AND A.SEND_TYPE = #{sendType}
                 </if>
         ) A
         <include refid="searchConditions"/>
@@ -60,22 +60,22 @@
                 A.RESULT_MSG AS RESULT_MSG,
                 A.UPD_DTTM AS UPD_DTTM
             FROM SMS.SMS_HISTORY A
-            WHERE 1=1
-                <if test="sendType != null and sendType != ''">
-                    AND A.SEND_TYPE = #{sendType}
-                </if>
-                <if test="sendStatus != null and sendStatus != ''">
-                    AND A.SEND_STATUS = #{sendStatus}
-                </if>
+            WHERE 1 = 1
                 <if test="sentAt != null and sentAt != ''">
-                    AND a.sent_at <![CDATA[ >= ]]> TO_TIMESTAMP(#{sentAt} || '000000', 'YYYYMMDDHH24MISS') AND a.sent_at <![CDATA[ < ]]> TO_TIMESTAMP(#{sentAt} || '000000', 'YYYYMMDDHH24MISS') + INTERVAL '1' DAY
+                    AND A.SENT_AT <![CDATA[ >= ]]> TO_TIMESTAMP(#{sentAt} || '000000', 'YYYYMMDDHH24MISS') AND A.SENT_AT <![CDATA[ < ]]> TO_TIMESTAMP(#{sentAt} || '000000', 'YYYYMMDDHH24MISS') + INTERVAL '1' DAY
                 </if>
                 <if test="receiverNo != null and receiverNo != ''">
                     AND A.RECEIVER_NO LIKE '%' || #{receiverNo} || '%'
                 </if>
+                <if test="sendStatus != null and sendStatus != ''">
+                    AND A.SEND_STATUS = #{sendStatus}
+                </if>
+                <if test="sendType != null and sendType != ''">
+                    AND A.SEND_TYPE = #{sendType}
+                </if>
         ) A
         <include refid="searchConditions"/>
-        ORDER BY A.SENT_AT DESC, A.SMS_HISTORY_ID DESC
+        ORDER BY A.SMS_HISTORY_ID
         OFFSET #{offset} ROWS FETCH NEXT #{size} ROWS ONLY
     </select>
 

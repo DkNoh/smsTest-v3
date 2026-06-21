@@ -27,6 +27,28 @@
     margin-right: .75rem;
 }
 
+.admin-shell .sidebar {
+    --cui-sidebar-nav-link-icon-color: var(--cui-secondary-color);
+    --cui-sidebar-nav-link-hover-icon-color: var(--cui-primary);
+    --cui-sidebar-nav-link-active-icon-color: var(--cui-primary);
+}
+
+.admin-shell .sidebar .nav-icon.lucide {
+    color: var(--cui-sidebar-nav-link-icon-color);
+    stroke: currentColor;
+    transition: color .15s ease-in-out;
+}
+
+.admin-shell .sidebar .nav-link:hover .nav-icon.lucide,
+.admin-shell .sidebar .nav-link:focus .nav-icon.lucide {
+    color: var(--cui-sidebar-nav-link-hover-icon-color);
+}
+
+.admin-shell .sidebar .nav-link.active .nav-icon.lucide,
+.admin-shell .sidebar .nav-group.show > .nav-link .nav-icon.lucide {
+    color: var(--cui-sidebar-nav-link-active-icon-color);
+}
+
 .toast-icon {
     width: 1rem;
     height: 1rem;

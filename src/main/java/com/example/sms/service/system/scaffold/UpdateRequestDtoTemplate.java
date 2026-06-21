@@ -34,12 +34,17 @@ public final class UpdateRequestDtoTemplate {
           .append("@Data\n")
           .append("public class ").append(model.domainClass()).append("UpdateRequestDTO {\n\n");
 
-        if (!"id".equals(model.pkFieldName())) {
-            sb.append("    /** PK 필드 (WHERE 조건): ").append(model.pkColumn()).append(" */\n");
+        if (model.pkColumns().isEmpty()) {
+            sb.append("    // TODO: PK 필드 (WHERE 조건). 실제 PK 컬럼명으로 교체한다\n")
+              .append("    private String id;\n\n");
         } else {
-            sb.append("    // TODO: PK 필드 (WHERE 조건). 실제 PK 컬럼명으로 교체한다\n");
+            sb.append("    /** PK 필드 (WHERE 조건): ").append(String.join(", ", model.pkColumns())).append(" */\n");
+            for (String pkColumn : model.pkColumns()) {
+                sb.append("    private ").append(model.pkJavaType(pkColumn)).append(" ")
+                  .append(QueryColumnExtractor.toCamelCase(pkColumn)).append(";\n");
+            }
+            sb.append("\n");
         }
-        sb.append("    private ").append(model.pkJavaType()).append(" ").append(model.pkFieldName()).append(";\n\n");
 
         for (ScaffoldModel.ColumnConfig column : model.columnConfigs()) {
             if (!column.editable()) {

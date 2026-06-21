@@ -29,6 +29,11 @@ public final class ServiceTemplate {
         if (model.includeExcel()) {
             sb.append("import java.util.Map;\n");
         }
+        if (model.includeCreateUpdate()) {
+            for (String imp : model.pkParamImports()) {
+                sb.append(imp).append("\n");
+            }
+        }
         sb.append("import lombok.RequiredArgsConstructor;\n")
           .append("import org.springframework.stereotype.Service;\n")
           .append("import org.springframework.transaction.annotation.Transactional;\n\n")
@@ -61,8 +66,8 @@ public final class ServiceTemplate {
               .append("        }\n")
               .append("    }\n\n")
               .append("    @Transactional\n")
-              .append("    public void delete(").append(model.pkJavaType()).append(" ").append(model.pkFieldName()).append(") {\n")
-              .append("        mapper.delete(").append(model.pkFieldName()).append(");\n")
+              .append("    public void delete(").append(deleteMethodParams(model)).append(") {\n")
+              .append("        mapper.delete(").append(deleteCallArgs(model)).append(");\n")
               .append("    }\n");
         }
 
@@ -91,6 +96,23 @@ public final class ServiceTemplate {
             sb.append("\"").append(upperCase ? value.toUpperCase() : value).append("\"");
         }
         return sb.toString();
+    }
+
+    private static String deleteMethodParams(ScaffoldModel model) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < model.pkColumns().size(); i++) {
+            String pkColumn = model.pkColumns().get(i);
+            if (i > 0) {
+                sb.append(", ");
+            }
+            sb.append(model.pkJavaType(pkColumn)).append(" ")
+              .append(QueryColumnExtractor.toCamelCase(pkColumn));
+        }
+        return sb.toString();
+    }
+
+    private static String deleteCallArgs(ScaffoldModel model) {
+        return String.join(", ", model.pkFieldNames());
     }
 
     private static String maskExcelRows(ScaffoldModel model) {

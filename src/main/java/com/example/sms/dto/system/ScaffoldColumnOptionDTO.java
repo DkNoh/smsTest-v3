@@ -11,6 +11,8 @@ public class ScaffoldColumnOptionDTO {
     private String align;
     private String dateFormat;
     private String maskType;
+    private String inputMask;
+    private String validate;
 
     public String getColumnName() {
         return columnName;
@@ -82,5 +84,21 @@ public class ScaffoldColumnOptionDTO {
 
     public void setMaskType(String maskType) {
         this.maskType = maskType;
+    }
+
+    public String getInputMask() {
+        return inputMask;
+    }
+
+    public void setInputMask(String inputMask) {
+        this.inputMask = inputMask;
+    }
+
+    public String getValidate() {
+        return validate;
+    }
+
+    public void setValidate(String validate) {
+        this.validate = validate;
     }
 }

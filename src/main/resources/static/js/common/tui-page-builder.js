@@ -48,7 +48,7 @@ class TuiPageBuilder {
             autoModal: false,         // true 설정 시 그리드 컬럼 메타를 이용해 자동 모달 띄움
             autoModalTitle: '상세 정보',
             autoModalCreateTitle: null,
-            modalActions: null        // { updateUrl, deleteUrl, pkField, lockField, beforeLockField, editable }
+            modalActions: null        // { updateUrl, deleteUrl, pkFields|pkField, lockField, beforeLockField, editable }
         }, config);
 
         // 2. 내부 상태 변수 초기화
@@ -158,6 +158,8 @@ class TuiPageBuilder {
                 input.name = col.name;
                 input.className = 'form-control form-control-sm detail-input';
                 input.value = formValue;
+                if (col.inputMask) input.dataset.mask = col.inputMask;
+                if (col.validate) input.dataset.validate = col.validate;
                 valueDiv.appendChild(input);
             } else if (col.formatter && typeof col.formatter === 'function') {
                 valueDiv.innerHTML = `<span class="detail-readonly">${col.formatter({ value: rawVal, row: row }) || '-'}</span>`;
@@ -177,6 +179,7 @@ class TuiPageBuilder {
 
         this._showModalElement(modal);
         this._refreshIcons();
+        this._applyFieldFormats(formEl);
     }
 
     _ensureAutoModal() {
@@ -262,6 +265,8 @@ class TuiPageBuilder {
             input.type = 'text';
             input.name = col.name;
             input.className = 'form-control form-control-sm detail-input';
+            if (col.inputMask) input.dataset.mask = col.inputMask;
+            if (col.validate) input.dataset.validate = col.validate;
             valueDiv.appendChild(input);
 
             rowDiv.appendChild(labelDiv);
@@ -275,6 +280,7 @@ class TuiPageBuilder {
 
         this._showModalElement(modal);
         this._refreshIcons();
+        this._applyFieldFormats(formEl);
     }
 
     _closeAutoModal() {
@@ -290,9 +296,7 @@ class TuiPageBuilder {
         if (!actions) {
             return;
         }
-        if (actions.pkField) {
-            this._appendHidden(formEl, actions.pkField, row[actions.pkField]);
-        }
+        this._pkFields(actions).forEach(pkField => this._appendHidden(formEl, pkField, row[pkField]));
         if (actions.beforeLockField) {
             const lockValue = actions.lockField ? row[actions.lockField] : '';
             this._appendHidden(formEl, actions.beforeLockField, lockValue);
@@ -327,9 +331,12 @@ class TuiPageBuilder {
         }
     }
 
-    _createAutoModalRow() {
+    async _createAutoModalRow() {
         const actions = this.config.modalActions || {};
         if (!actions.createUrl || !this._hasPagePermission('create')) {
+            return;
+        }
+        if (!(await this._validateModalForm())) {
             return;
         }
         const payload = this._readAutoModalForm();
@@ -344,9 +351,12 @@ class TuiPageBuilder {
             .catch(err => console.error('[TuiPageBuilder] 등록 실패', err));
     }
 
-    _updateAutoModalRow() {
+    async _updateAutoModalRow() {
         const actions = this.config.modalActions || {};
         if (!actions.updateUrl || !this._hasPagePermission('update')) {
+            return;
+        }
+        if (!(await this._validateModalForm())) {
             return;
         }
         const payload = this._readAutoModalForm();
@@ -363,11 +373,17 @@ class TuiPageBuilder {
 
     _deleteAutoModalRow() {
         const actions = this.config.modalActions || {};
-        if (!actions.deleteUrl || !this._hasPagePermission('delete') || !actions.pkField || !this.currentModalRow) {
+        const pkFields = this._pkFields(actions);
+        if (!actions.deleteUrl || !this._hasPagePermission('delete') || pkFields.length === 0 || !this.currentModalRow) {
             return;
         }
-        const pkValue = this.currentModalRow[actions.pkField];
-        if (pkValue === null || pkValue === undefined || pkValue === '') {
+        const params = {};
+        const missingPk = pkFields.some(pkField => {
+            const pkValue = this.currentModalRow[pkField];
+            params[pkField] = pkValue;
+            return pkValue === null || pkValue === undefined || pkValue === '';
+        });
+        if (missingPk) {
             if (typeof CommonUtils !== 'undefined') {
                 CommonUtils.toast('삭제 기준 PK 값이 없습니다.', 'warning');
             }
@@ -375,7 +391,7 @@ class TuiPageBuilder {
         }
 
         const runDelete = () => {
-            axios.post(actions.deleteUrl, null, { params: { [actions.pkField]: pkValue } })
+            axios.post(actions.deleteUrl, null, { params })
                 .then(() => {
                     this._closeAutoModal();
                     if (typeof CommonUtils !== 'undefined') {
@@ -401,8 +417,18 @@ class TuiPageBuilder {
         document.querySelectorAll('#tui-auto-modal-form input[name], #tui-auto-modal-form select[name], #tui-auto-modal-form textarea[name]')
             .forEach(field => {
                 result[field.name] = field.value === '' ? null : field.value;
-            });
+        });
         return result;
+    }
+
+    _pkFields(actions) {
+        if (!actions) {
+            return [];
+        }
+        if (Array.isArray(actions.pkFields) && actions.pkFields.length > 0) {
+            return actions.pkFields.filter(Boolean);
+        }
+        return actions.pkField ? [actions.pkField] : [];
     }
 
     _refreshIcons() {
@@ -411,6 +437,21 @@ class TuiPageBuilder {
         } else if (window.lucide && typeof window.lucide.createIcons === 'function') {
             window.lucide.createIcons();
         }
+    }
+
+    // 모달 폼에 입력 마스크(IMask) + 검증(JustValidate)을 부착한다 (field-format.js)
+    _applyFieldFormats(formEl) {
+        if (window.FieldFormat && formEl) {
+            FieldFormat.applyFieldFormats(formEl);
+        }
+    }
+
+    // 모달 폼 검증을 실행한다. 검증기가 없으면 통과(true). 서버 @Valid가 최종 권위다.
+    _validateModalForm() {
+        if (!window.FieldFormat) {
+            return Promise.resolve(true);
+        }
+        return FieldFormat.validateForm(document.getElementById('tui-auto-modal-form'));
     }
 
     _hasPagePermission(permission) {

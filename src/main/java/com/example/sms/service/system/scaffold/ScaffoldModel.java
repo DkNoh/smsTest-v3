@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
 import org.springframework.util.StringUtils;
 
 /**
@@ -19,13 +21,21 @@ public class ScaffoldModel {
     private final List<String> columns;
     private final List<String> searchVars;
     private final Map<String, String> typeMap;
+    private final ScaffoldDialect dialect;
 
     public ScaffoldModel(ScaffoldRequestDTO request, List<String> columns,
                          List<String> searchVars, Map<String, String> typeMap) {
+        this(request, columns, searchVars, typeMap, ScaffoldDialect.ORACLE);
+    }
+
+    public ScaffoldModel(ScaffoldRequestDTO request, List<String> columns,
+                         List<String> searchVars, Map<String, String> typeMap,
+                         ScaffoldDialect dialect) {
         this.request = request;
         this.columns = List.copyOf(columns);
         this.searchVars = List.copyOf(searchVars);
         this.typeMap = Map.copyOf(typeMap);
+        this.dialect = dialect == null ? ScaffoldDialect.ORACLE : dialect;
     }
 
     public ScaffoldRequestDTO getRequest() {
@@ -42,6 +52,10 @@ public class ScaffoldModel {
 
     public Map<String, String> getTypeMap() {
         return typeMap;
+    }
+
+    public ScaffoldDialect dialect() {
+        return dialect;
     }
 
     public String moduleName() {
@@ -105,15 +119,23 @@ public class ScaffoldModel {
     }
 
     public String pkColumn() {
-        String configured = normalizeColumn(request.getPkColumn());
-        if (StringUtils.hasText(configured)) {
+        return pkColumns().stream().findFirst().orElse("");
+    }
+
+    public List<String> pkColumns() {
+        List<String> configured = request.getPkColumns().stream()
+            .map(ScaffoldModel::normalizeColumn)
+            .filter(StringUtils::hasText)
+            .distinct()
+            .toList();
+        if (!configured.isEmpty()) {
             return configured;
         }
-        return columns.stream()
-            .map(ScaffoldModel::normalizeColumn)
-            .filter(column -> column.endsWith("_ID"))
-            .findFirst()
-            .orElse("");
+        String legacy = normalizeColumn(request.getPkColumn());
+        if (StringUtils.hasText(legacy)) {
+            return List.of(legacy);
+        }
+        return List.of();
     }
 
     public String pkFieldName() {
@@ -121,9 +143,34 @@ public class ScaffoldModel {
         return StringUtils.hasText(pkColumn) ? QueryColumnExtractor.toCamelCase(pkColumn) : "id";
     }
 
+    public List<String> pkFieldNames() {
+        return pkColumns().stream()
+            .map(QueryColumnExtractor::toCamelCase)
+            .toList();
+    }
+
+    /** delete 파라미터(PK)에 필요한 java import 문 목록. (LocalDate/LocalDateTime/BigDecimal) */
+    public List<String> pkParamImports() {
+        Set<String> imports = new TreeSet<>();
+        for (String pkColumn : pkColumns()) {
+            switch (pkJavaType(pkColumn)) {
+                case "LocalDate" -> imports.add("import java.time.LocalDate;");
+                case "LocalDateTime" -> imports.add("import java.time.LocalDateTime;");
+                case "BigDecimal" -> imports.add("import java.math.BigDecimal;");
+                default -> { }
+            }
+        }
+        return new ArrayList<>(imports);
+    }
+
     public String pkJavaType() {
         String pkColumn = pkColumn();
         return StringUtils.hasText(pkColumn) ? typeMap.getOrDefault(pkColumn, "String") : "String";
+    }
+
+    public String pkJavaType(String pkColumn) {
+        String normalized = normalizeColumn(pkColumn);
+        return StringUtils.hasText(normalized) ? typeMap.getOrDefault(normalized, "String") : "String";
     }
 
     public String lockJavaType() {
@@ -211,12 +258,19 @@ public class ScaffoldModel {
             String maskType = option != null && StringUtils.hasText(option.getMaskType())
                 ? option.getMaskType().trim().toUpperCase()
                 : "NONE";
+            String inputMask = option != null && StringUtils.hasText(option.getInputMask())
+                ? option.getInputMask().trim().toLowerCase()
+                : "";
+            String validate = option != null && StringUtils.hasText(option.getValidate())
+                ? option.getValidate().trim()
+                : "";
             boolean visible = option == null || option.isVisible();
             boolean modalVisible = option == null || option.isModalVisible();
             boolean editable = (option != null ? option.isEditable() : isDefaultEditableCandidate(columnName))
                 && !isProtectedUpdateColumn(columnName);
             result.add(new ColumnConfig(columnName, QueryColumnExtractor.toCamelCase(columnName),
-                javaType, headerName, width, align, dateFormat, maskType, visible, modalVisible, editable));
+                javaType, headerName, width, align, dateFormat, maskType, visible, modalVisible, editable,
+                inputMask, validate));
         }
         return result;
     }
@@ -271,7 +325,7 @@ public class ScaffoldModel {
             return true;
         }
         String normalized = normalizeColumn(columnName);
-        return normalized.equals(pkColumn())
+        return pkColumns().contains(normalized)
             || normalized.equals(lockColumn())
             || normalized.equals("REG_ID")
             || normalized.equals("REG_DTTM")
@@ -307,13 +361,22 @@ public class ScaffoldModel {
 
     public record ColumnConfig(String columnName, String fieldName, String javaType, String headerName,
                                int width, String align, String dateFormat, String maskType,
-                               boolean visible, boolean modalVisible, boolean editable) {
+                               boolean visible, boolean modalVisible, boolean editable,
+                               String inputMask, String validate) {
         public boolean isDateColumn() {
             return "LocalDate".equals(javaType) || "LocalDateTime".equals(javaType);
         }
 
         public boolean hasMask() {
             return !"NONE".equals(maskType);
+        }
+
+        public boolean hasInputMask() {
+            return inputMask != null && !inputMask.isEmpty();
+        }
+
+        public boolean hasValidate() {
+            return validate != null && !validate.isEmpty();
         }
     }
 }

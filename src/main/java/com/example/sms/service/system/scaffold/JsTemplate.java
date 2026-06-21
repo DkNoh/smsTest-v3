@@ -55,6 +55,12 @@ public final class JsTemplate {
             if (column.editable()) {
                 sb.append(", editable: true");
             }
+            if (column.hasInputMask()) {
+                sb.append(", inputMask: '").append(escapeJs(column.inputMask())).append("'");
+            }
+            if (column.hasValidate()) {
+                sb.append(", validate: '").append(escapeJs(column.validate())).append("'");
+            }
             appendFormatter(sb, column);
             sb.append(" }");
             if (i < columns.size() - 1) {
@@ -72,7 +78,7 @@ public final class JsTemplate {
                   .append("            createUrl: '").append(model.screenUrl()).append("/create',\n")
                   .append("            updateUrl: '").append(model.screenUrl()).append("/update',\n")
                   .append("            deleteUrl: '").append(model.screenUrl()).append("/delete',\n")
-                  .append("            pkField: '").append(model.pkFieldName()).append("',\n");
+                  .append("            pkFields: [").append(pkFields(model)).append("],\n");
                 if (!model.lockColumn().isEmpty()) {
                     sb.append("            lockField: '").append(model.lockFieldName()).append("',\n")
                       .append("            beforeLockField: '").append(model.beforeLockFieldName()).append("',\n");
@@ -116,5 +122,16 @@ public final class JsTemplate {
 
     private static String escapeJs(String value) {
         return value == null ? "" : value.replace("\\", "\\\\").replace("'", "\\'");
+    }
+
+    private static String pkFields(ScaffoldModel model) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < model.pkFieldNames().size(); i++) {
+            if (i > 0) {
+                sb.append(", ");
+            }
+            sb.append("'").append(model.pkFieldNames().get(i)).append("'");
+        }
+        return sb.toString();
     }
 }

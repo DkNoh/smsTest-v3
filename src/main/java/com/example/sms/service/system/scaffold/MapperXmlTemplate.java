@@ -25,6 +25,7 @@ public final class MapperXmlTemplate {
         if (model.includeCreateUpdate() && targetTable.isEmpty()) {
             throw new IllegalStateException("CRUD 모드는 targetTable이 필요합니다. 조회 SQL의 FROM 테이블을 추론할 수 없으면 수정 대상 테이블을 입력하세요.");
         }
+        validateCrudModel(model);
 
         StringBuilder sb = new StringBuilder();
         sb.append("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n")
@@ -62,7 +63,7 @@ public final class MapperXmlTemplate {
           .append("        ) A\n")
           .append("        <include refid=\"searchConditions\"/>\n")
           .append("        ORDER BY ").append(model.orderBy()).append("\n")
-          .append("        OFFSET #{offset} ROWS FETCH NEXT #{size} ROWS ONLY\n")
+          .append("        ").append(model.dialect().pageClause()).append("\n")
           .append("    </select>\n");
 
         if (model.includeCreateUpdate()) {
@@ -73,12 +74,12 @@ public final class MapperXmlTemplate {
               .append("    <update id=\"update\">\n")
               .append("        UPDATE ").append(targetTable).append("\n")
               .append(updateSetClause(model))
-              .append("         WHERE ").append(pkWhereColumn(model)).append(" = #{").append(model.pkFieldName()).append("}\n")
+              .append(pkWhereClause(model, "         WHERE "))
               .append(lockWhereClause(model))
               .append("    </update>\n\n")
               .append("    <delete id=\"delete\">\n")
-              .append("        DELETE FROM ").append(targetTable).append(" WHERE ").append(pkWhereColumn(model))
-              .append(" = #{").append(model.pkFieldName()).append("}\n")
+              .append("        DELETE FROM ").append(targetTable)
+              .append(pkWhereClause(model, " WHERE "))
               .append("    </delete>\n");
         }
 
@@ -163,14 +164,14 @@ public final class MapperXmlTemplate {
 
         String javaType = model.getTypeMap().getOrDefault(columnName(columnRef).toUpperCase(), "");
         if ("LocalDateTime".equals(javaType)) {
-            String start = "TO_TIMESTAMP(#{" + fieldName + "} || '000000', 'YYYYMMDDHH24MISS')";
+            String start = model.dialect().timestampExpression(fieldName, "000000");
             return columnRef + " " + xmlOperator(">=") + " " + start
-                + " AND " + columnRef + " " + xmlOperator("<") + " " + start + " + INTERVAL '1' DAY";
+                + " AND " + columnRef + " " + xmlOperator("<") + " " + model.dialect().plusOneDay(start);
         }
         if ("LocalDate".equals(javaType)) {
-            String start = "TO_DATE(#{" + fieldName + "}, 'YYYYMMDD')";
+            String start = model.dialect().dateExpression(fieldName);
             return columnRef + " " + xmlOperator(">=") + " " + start
-                + " AND " + columnRef + " " + xmlOperator("<") + " " + start + " + 1";
+                + " AND " + columnRef + " " + xmlOperator("<") + " " + model.dialect().plusOneDay(start);
         }
         return columnRef + " " + xmlOperator(operator) + " #{" + fieldName + "}";
     }
@@ -187,10 +188,10 @@ public final class MapperXmlTemplate {
         String javaType = model.getTypeMap().getOrDefault(columnName.toUpperCase(), "");
         if ("LocalDateTime".equals(javaType)) {
             String suffix = isUpperBound(operator, fieldName) ? "235959" : "000000";
-            return "TO_TIMESTAMP(#{" + fieldName + "} || '" + suffix + "', 'YYYYMMDDHH24MISS')";
+            return model.dialect().timestampExpression(fieldName, suffix);
         }
         if ("LocalDate".equals(javaType)) {
-            return "TO_DATE(#{" + fieldName + "}, 'YYYYMMDD')";
+            return model.dialect().dateExpression(fieldName);
         }
         return "#{" + fieldName + "}";
     }
@@ -217,10 +218,6 @@ public final class MapperXmlTemplate {
     private static boolean isUpperBound(String operator, String fieldName) {
         return "<=".equals(operator) || "<".equals(operator)
             || fieldName.endsWith("To") || fieldName.startsWith("end") || fieldName.startsWith("to");
-    }
-
-    private static String pkWhereColumn(ScaffoldModel model) {
-        return model.pkColumn().isEmpty() ? "ID" : model.pkColumn();
     }
 
     private static String insertSql(ScaffoldModel model, String targetTable) {
@@ -263,7 +260,8 @@ public final class MapperXmlTemplate {
             assignments.add(model.lockColumn() + " = " + currentValueExpression(model, model.lockColumn()));
         }
         if (assignments.isEmpty()) {
-            assignments.add(pkWhereColumn(model) + " = " + pkWhereColumn(model));
+            String firstPk = model.pkColumn().isEmpty() ? "ID" : model.pkColumn();
+            assignments.add(firstPk + " = " + firstPk);
         }
 
         StringBuilder sb = new StringBuilder("           SET ");
@@ -297,18 +295,59 @@ public final class MapperXmlTemplate {
         String normalized = columnName.toUpperCase();
         String javaType = model.getTypeMap().getOrDefault(normalized, "");
         if ("LocalDate".equals(javaType)) {
-            return "TRUNC(SYSDATE)";
+            return model.dialect().currentDate();
         }
         if ("String".equals(javaType) && (normalized.endsWith("DTTM") || normalized.endsWith("_DTM"))) {
-            return "TO_CHAR(SYSDATE, 'YYYYMMDDHH24MISS')";
+            return model.dialect().currentTimestampString();
         }
-        return "SYSTIMESTAMP";
+        return model.dialect().currentTimestamp();
+    }
+
+    private static String pkWhereClause(ScaffoldModel model, String prefix) {
+        List<String> pkColumns = model.pkColumns();
+        if (pkColumns.isEmpty()) {
+            throw new IllegalStateException("CRUD mode requires at least one PK column.");
+        }
+        StringBuilder sb = new StringBuilder(prefix);
+        for (int i = 0; i < pkColumns.size(); i++) {
+            String column = pkColumns.get(i);
+            if (i > 0) {
+                sb.append("           AND ");
+            }
+            sb.append(column).append(" = #{").append(QueryColumnExtractor.toCamelCase(column)).append("}\n");
+        }
+        return sb.toString();
     }
 
     private static String lockWhereClause(ScaffoldModel model) {
         if (model.lockColumn().isEmpty()) {
             return "";
         }
-        return "           AND " + model.lockColumn() + " = #{" + model.beforeLockFieldName() + "}\n";
+        String beforeValue = bindParameter(model.beforeLockFieldName(), model.lockJavaType());
+        return "           AND (" + model.lockColumn() + " = " + beforeValue + "\n"
+            + "                OR (" + model.lockColumn() + " IS NULL AND " + beforeValue + " IS NULL))\n";
+    }
+
+    private static void validateCrudModel(ScaffoldModel model) {
+        if (!model.includeCreateUpdate() || model.lockColumn().isEmpty()) {
+            return;
+        }
+        if (model.pkColumns().contains(model.lockColumn())) {
+            throw new IllegalStateException("Optimistic lock column must not be a PK column: " + model.lockColumn());
+        }
+    }
+
+    private static String bindParameter(String fieldName, String javaType) {
+        String jdbcType = switch (javaType) {
+            case "LocalDateTime" -> "TIMESTAMP";
+            case "LocalDate" -> "DATE";
+            case "BigDecimal" -> "DECIMAL";
+            case "Long", "Integer" -> "NUMERIC";
+            default -> "";
+        };
+        if (jdbcType.isEmpty()) {
+            return "#{" + fieldName + "}";
+        }
+        return "#{" + fieldName + ",jdbcType=" + jdbcType + "}";
     }
 }

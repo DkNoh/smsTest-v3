@@ -14,14 +14,16 @@
     <link rel="stylesheet" href="/lib/tui-date-picker.css" />
     <link rel="stylesheet" href="/lib/tui-grid.css" />
 
-    <script src="/lib/tui-pagination.js"></script>
+    <script src="/lib/tui-pagination.min.js"></script>
     <script src="/lib/xlsx.full.min.js"></script>
-    <script src="/lib/tui-date-picker.js"></script>
-    <script src="/lib/tui-grid.js"></script>
+    <script src="/lib/tui-date-picker.min.js"></script>
+    <script src="/lib/tui-grid.min.js"></script>
     <script src="/lib/axios.min.js"></script>
     <script src="/lib/dayjs.min.js"></script>
     <script src="/lib/ko.js"></script>
     <script src="/lib/lucide.js"></script>
+    <script src="/lib/imask.min.js"></script>
+    <script src="/lib/just-validate.min.js"></script>
     <script>dayjs.locale('ko');</script>
 
     <!-- CoreUI CSS -->
@@ -34,6 +36,7 @@
     <script th:src="@{/js/common/tui-common.js}"></script>
     <script th:src="@{/js/common/tui-page-builder.js}"></script>
     <script th:src="@{/js/common/form-binder.js}"></script>
+    <script th:src="@{/js/common/field-format.js}"></script>
 
     <!-- 로그인 사용자 정보를 자바스크립트 전역 변수로 노출. 사용자 식별은 EMP_ID + DEP_ID -->
     <script th:inline="javascript">

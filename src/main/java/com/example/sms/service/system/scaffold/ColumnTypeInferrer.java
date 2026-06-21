@@ -6,6 +6,7 @@ import java.sql.ResultSetMetaData;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import com.example.sms.config.ScaffoldProperties;
 import org.springframework.context.annotation.Profile;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
@@ -19,9 +20,11 @@ import org.springframework.stereotype.Component;
 public class ColumnTypeInferrer {
 
     private final JdbcTemplate jdbcTemplate;
+    private final ScaffoldProperties scaffoldProperties;
 
-    public ColumnTypeInferrer(JdbcTemplate jdbcTemplate) {
+    public ColumnTypeInferrer(JdbcTemplate jdbcTemplate, ScaffoldProperties scaffoldProperties) {
         this.jdbcTemplate = jdbcTemplate;
+        this.scaffoldProperties = scaffoldProperties;
     }
 
     public Map<String, String> inferTypes(String rawQuery, List<String> columns) {
@@ -41,7 +44,8 @@ public class ColumnTypeInferrer {
             .replaceAll("(?m)^\\s*OR\\s*$", "")
             .replaceAll("(?i)WHERE\\s+(AND|OR)\\b", "WHERE 1=1")
             .trim();
-        String wrappedQuery = "SELECT * FROM (" + safeQuery + ") WHERE ROWNUM = 0";
+        ScaffoldDialect dialect = scaffoldProperties.dialect();
+        String wrappedQuery = dialect.emptyResultQuery(safeQuery);
 
         try {
             jdbcTemplate.execute((java.sql.Connection conn) -> {
@@ -50,8 +54,8 @@ public class ColumnTypeInferrer {
                     ResultSetMetaData meta = rs.getMetaData();
                     for (int i = 1; i <= meta.getColumnCount(); i++) {
                         String label = meta.getColumnLabel(i);
-                        String javaType = oracleTypeToJava(
-                            meta.getColumnTypeName(i), meta.getPrecision(i), meta.getScale(i));
+                        String javaType = dialect.javaType(
+                            meta.getColumnTypeName(i), meta.getColumnType(i), meta.getPrecision(i), meta.getScale(i));
                         String matched = findMatchingColumn(columns, label);
                         if (matched != null) {
                             typeMap.put(matched, javaType);
@@ -75,18 +79,6 @@ public class ColumnTypeInferrer {
             root = root.getCause();
         }
         return root.getMessage();
-    }
-
-    private String oracleTypeToJava(String oracleType, int precision, int scale) {
-        return switch (oracleType.toUpperCase().split("\\(")[0].trim()) {
-            case "NUMBER" -> scale > 0 ? "BigDecimal" : (precision > 9 ? "Long" : "Integer");
-            case "DATE" -> "LocalDate";
-            case "TIMESTAMP", "TIMESTAMP WITH TIME ZONE",
-                 "TIMESTAMP WITH LOCAL TIME ZONE" -> "LocalDateTime";
-            case "CLOB", "NCLOB" -> "String";
-            case "BLOB" -> "byte[]";
-            default -> "String";
-        };
     }
 
     private String findMatchingColumn(List<String> columns, String label) {

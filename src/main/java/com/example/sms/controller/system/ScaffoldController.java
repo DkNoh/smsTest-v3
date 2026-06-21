@@ -39,7 +39,8 @@ public class ScaffoldController {
     @ResponseBody
     @PostMapping("/analyze")
     public ResponseEntity<ApiResponse<Map<String, Object>>> analyze(@RequestBody Map<String, String> request) {
-        return ResponseEntity.ok(ApiResponse.success(scaffoldService.analyze(request.get("rawQuery"))));
+        return ResponseEntity.ok(ApiResponse.success(
+            scaffoldService.analyze(request.get("rawQuery"), request.get("targetTable"))));
     }
 
     @ResponseBody

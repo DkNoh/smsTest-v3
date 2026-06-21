@@ -39,6 +39,7 @@ public class ScaffoldRequestDTO {
     private String screenMode;
     private String targetTable;
     private String pkColumn;
+    private List<String> pkColumns = new ArrayList<>();
     private String lockColumn;
     private List<ScaffoldSearchParamOptionDTO> searchParamOptions = new ArrayList<>();
     private List<ScaffoldColumnOptionDTO> columnOptions = new ArrayList<>();
@@ -146,6 +147,17 @@ public class ScaffoldRequestDTO {
 
     public void setPkColumn(String pkColumn) {
         this.pkColumn = pkColumn;
+    }
+
+    public List<String> getPkColumns() {
+        if ((pkColumns == null || pkColumns.isEmpty()) && pkColumn != null && !pkColumn.trim().isEmpty()) {
+            return List.of(pkColumn);
+        }
+        return pkColumns != null ? pkColumns : new ArrayList<>();
+    }
+
+    public void setPkColumns(List<String> pkColumns) {
+        this.pkColumns = pkColumns != null ? pkColumns : new ArrayList<>();
     }
 
     public String getLockColumn() {

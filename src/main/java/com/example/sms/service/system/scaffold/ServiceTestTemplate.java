@@ -72,9 +72,9 @@ public final class ServiceTestTemplate {
               .append("    @Test\n")
               .append("    void 삭제는_Mapper에_위임한다() {\n")
               .append("        // when\n")
-              .append("        service.delete(").append(samplePk(model)).append(");\n\n")
+              .append("        service.delete(").append(samplePkArgs(model)).append(");\n\n")
               .append("        // then\n")
-              .append("        then(mapper).should().delete(").append(samplePk(model)).append(");\n")
+              .append("        then(mapper).should().delete(").append(samplePkArgs(model)).append(");\n")
               .append("    }\n");
         }
 
@@ -83,10 +83,20 @@ public final class ServiceTestTemplate {
         return sb.toString();
     }
 
-    private static String samplePk(ScaffoldModel model) {
-        return switch (model.pkJavaType()) {
+    private static String samplePkArgs(ScaffoldModel model) {
+        return model.pkColumns().stream()
+            .map(pkColumn -> sampleValue(model.pkJavaType(pkColumn)))
+            .collect(java.util.stream.Collectors.joining(", "));
+    }
+
+    private static String sampleValue(String javaType) {
+        // Mockito 검증을 위해 두 번 평가해도 동일한(equals) 안정적 리터럴을 쓴다. now()는 금지.
+        return switch (javaType) {
             case "Integer" -> "1";
             case "Long" -> "1L";
+            case "LocalDate" -> "java.time.LocalDate.of(2020, 1, 1)";
+            case "LocalDateTime" -> "java.time.LocalDateTime.of(2020, 1, 1, 0, 0)";
+            case "BigDecimal" -> "java.math.BigDecimal.ONE";
             default -> "\"1\"";
         };
     }

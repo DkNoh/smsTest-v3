@@ -1,6 +1,7 @@
 package com.example.sms.service.system.scaffold;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.example.sms.dto.system.ScaffoldColumnOptionDTO;
 import com.example.sms.dto.system.ScaffoldMenuOptionDTO;
@@ -25,6 +26,9 @@ class ScaffoldTemplateTest {
         request.setIncludeCreateUpdate(createUpdate);
         request.setIncludeExcel(excel);
         request.setIncludePrivacy(privacy);
+        if (createUpdate) {
+            request.setPkColumn("RECEIVER_NO");
+        }
         return new ScaffoldModel(request,
             List.of("SEND_DT", "RECEIVER_NO"),
             List.of("startDt"),
@@ -404,6 +408,56 @@ class ScaffoldTemplateTest {
     }
 
     @Test
+    void 컬럼옵션의_입력마스크와_검증은_JS_컬럼에_조건부로_반영한다() {
+        // given : RECEIVER_NO에만 inputMask/validate 지정
+        ScaffoldRequestDTO request = requestWithOptions();
+        request.setScreenMode("CRUD");
+        request.setPkColumn("SMS_HISTORY_ID");
+        ScaffoldColumnOptionDTO phone = new ScaffoldColumnOptionDTO();
+        phone.setColumnName("RECEIVER_NO");
+        phone.setEditable(true);
+        phone.setHeaderName("수신번호");
+        phone.setWidth(160);
+        phone.setAlign("left");
+        phone.setInputMask("phone");
+        phone.setValidate("required|phone");
+        request.setColumnOptions(List.of(phone));
+        ScaffoldModel optionModel = optionModel(request);
+
+        // when
+        String js = JsTemplate.generate(optionModel);
+
+        // then : 지정한 컬럼만 inputMask/validate를 가진다
+        assertThat(js).contains("name: 'receiverNo', align: 'left', width: 160, editable: true, inputMask: 'phone', validate: 'required|phone'");
+        // 옵션 없는 컬럼에는 출력되지 않는다
+        assertThat(js).doesNotContain("name: 'sendType', align: 'center', width: 150, editable: true, inputMask:");
+    }
+
+    @Test
+    void 시간타입_PK는_delete_파라미터에_java_time_import를_추가한다() {
+        // given : LocalDateTime 컬럼이 복합 PK에 포함된다
+        ScaffoldRequestDTO request = requestWithOptions();
+        request.setScreenMode("CRUD");
+        request.setPkColumns(List.of("SMS_HISTORY_ID", "SEND_DT"));
+        ScaffoldModel optionModel = optionModel(request);
+
+        // when
+        String controller = ControllerTemplate.generate(optionModel);
+        String service = ServiceTemplate.generate(optionModel);
+        String mapper = MapperInterfaceTemplate.generate(optionModel);
+        String serviceTest = ServiceTestTemplate.generate(optionModel);
+
+        // then : delete 파라미터가 쓰는 LocalDateTime의 import가 있어야 컴파일된다
+        assertThat(controller).contains("import java.time.LocalDateTime;");
+        assertThat(controller).contains("delete(@RequestParam Long smsHistoryId, @RequestParam LocalDateTime sendDt)");
+        assertThat(service).contains("import java.time.LocalDateTime;");
+        assertThat(mapper).contains("import java.time.LocalDateTime;");
+        // ServiceTest는 now()가 아니라 안정적 리터럴을 써야 Mockito 검증이 일관된다
+        assertThat(serviceTest).contains("service.delete(1L, java.time.LocalDateTime.of(2020, 1, 1, 0, 0))");
+        assertThat(serviceTest).doesNotContain("LocalDateTime.now()");
+    }
+
+    @Test
     void PK와_락컬럼_옵션은_CRUD_생성물에_반영한다() {
         // given
         ScaffoldRequestDTO request = requestWithOptions();
@@ -426,8 +480,84 @@ class ScaffoldTemplateTest {
         assertThat(mapper).contains("int delete(@Param(\"smsHistoryId\") Long smsHistoryId);");
         assertThat(controller).contains("delete(@RequestParam Long smsHistoryId)");
         assertThat(xml).contains("WHERE SMS_HISTORY_ID = #{smsHistoryId}");
-        assertThat(xml).contains("AND UPD_DTTM = #{beforeUpdDttm}");
+        assertThat(xml).contains("AND (UPD_DTTM = #{beforeUpdDttm,jdbcType=TIMESTAMP}");
         assertThat(serviceTest).contains("service.delete(1L)");
+    }
+
+    @Test
+    void 복합_PK는_DTO_Mapper_Controller_JS_WHERE에_모두_반영한다() {
+        // given
+        ScaffoldRequestDTO request = requestWithOptions();
+        request.setScreenMode("CRUD");
+        request.setPkColumns(List.of("SMS_HISTORY_ID", "SEND_TYPE"));
+        request.setLockColumn("UPD_DTTM");
+        ScaffoldModel optionModel = optionModel(request);
+
+        // when
+        String updateDto = UpdateRequestDtoTemplate.generate(optionModel);
+        String mapper = MapperInterfaceTemplate.generate(optionModel);
+        String controller = ControllerTemplate.generate(optionModel);
+        String xml = MapperXmlTemplate.generate(optionModel);
+        String js = JsTemplate.generate(optionModel);
+
+        // then
+        assertThat(updateDto).contains("private Long smsHistoryId;");
+        assertThat(updateDto).contains("private String sendType;");
+        assertThat(mapper).contains("int delete(@Param(\"smsHistoryId\") Long smsHistoryId, @Param(\"sendType\") String sendType);");
+        assertThat(controller).contains("delete(@RequestParam Long smsHistoryId, @RequestParam String sendType)");
+        assertThat(xml).contains("WHERE SMS_HISTORY_ID = #{smsHistoryId}");
+        assertThat(xml).contains("AND SEND_TYPE = #{sendType}");
+        assertThat(js).contains("pkFields: ['smsHistoryId', 'sendType']");
+    }
+
+    @Test
+    void 낙관적_잠금_컬럼은_PK로_선택할_수_없다() {
+        // given
+        ScaffoldRequestDTO request = requestWithOptions();
+        request.setScreenMode("CRUD");
+        request.setPkColumn("SMS_HISTORY_ID");
+        request.setLockColumn("SMS_HISTORY_ID");
+        ScaffoldModel optionModel = optionModel(request);
+
+        // when / then
+        assertThatThrownBy(() -> MapperXmlTemplate.generate(optionModel))
+            .isInstanceOf(IllegalStateException.class)
+            .hasMessageContaining("must not be a PK column");
+    }
+
+    @Test
+    void DB_PLATFORM_POSTGRES는_Postgres_페이징과_시간_표현식을_생성한다() {
+        // given
+        ScaffoldRequestDTO request = requestWithOptions();
+        request.setScreenMode("CRUD");
+        request.setPkColumn("SMS_HISTORY_ID");
+        request.setLockColumn("UPD_DTTM");
+        request.setRawQuery("""
+            SELECT A.SMS_HISTORY_ID, A.SEND_DT, A.SEND_TYPE, A.SEND_STATUS, A.RECEIVER_NO, A.UPD_DTTM
+            FROM SMS_HISTORY A
+            WHERE 1=1
+            AND A.SEND_DT = $send_dt
+            """);
+        ScaffoldModel optionModel = new ScaffoldModel(request,
+            List.of("SMS_HISTORY_ID", "SEND_DT", "SEND_TYPE", "SEND_STATUS", "RECEIVER_NO", "UPD_DTTM"),
+            List.of("sendDt"),
+            Map.of(
+                "SMS_HISTORY_ID", "Long",
+                "SEND_DT", "LocalDateTime",
+                "SEND_TYPE", "String",
+                "SEND_STATUS", "String",
+                "RECEIVER_NO", "String",
+                "UPD_DTTM", "LocalDateTime"
+            ),
+            ScaffoldDialect.POSTGRES);
+
+        // when
+        String xml = MapperXmlTemplate.generate(optionModel);
+
+        // then
+        assertThat(xml).contains("OFFSET #{offset} LIMIT #{size}");
+        assertThat(xml).contains("UPD_DTTM = CURRENT_TIMESTAMP");
+        assertThat(xml).contains("+ INTERVAL '1 day'");
     }
 
     @Test
@@ -530,7 +660,7 @@ class ScaffoldTemplateTest {
         assertThat(JsTemplate.generate(crudModel)).contains("createUrl: '/sms/history/create'");
         assertThat(JsTemplate.generate(crudModel)).contains("updateUrl: '/sms/history/update'");
         assertThat(JsTemplate.generate(crudModel)).contains("deleteUrl: '/sms/history/delete'");
-        assertThat(JsTemplate.generate(crudModel)).contains("pkField: 'smsHistoryId'");
+        assertThat(JsTemplate.generate(crudModel)).contains("pkFields: ['smsHistoryId']");
         assertThat(JsTemplate.generate(crudModel)).contains("beforeLockField: 'beforeUpdDttm'");
         assertThat(HtmlTemplate.generate(crudModel)).contains("id=\"btn-create\"");
 

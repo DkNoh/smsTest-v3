@@ -106,7 +106,8 @@ document.addEventListener('DOMContentLoaded', function () {
             includePrivacy: document.querySelector('#includePrivacy').checked,
             screenMode: screenMode,
             targetTable: document.querySelector('#targetTable').value.trim(),
-            pkColumn: document.querySelector('#pkColumn').value,
+            pkColumn: readPkColumns()[0] || '',
+            pkColumns: readPkColumns(),
             lockColumn: document.querySelector('#lockColumn').value,
             searchParamOptions: readSearchParamOptions(),
             columnOptions: readColumnOptions(),
@@ -222,14 +223,15 @@ document.addEventListener('DOMContentLoaded', function () {
         const columns = analysis.columns || [];
         renderSearchParamOptions(searchVars);
         renderColumnOptions(columns);
-        renderColumnSelectOptions(columns);
+        renderColumnSelectOptions(columns, analysis.pkColumns || []);
         renderTargetTableDefault(analysis.targetTable || '');
         renderMenuDefaults();
     }
 
     async function analyzeQuery() {
         const response = await axios.post('/system/scaffold/analyze', {
-            rawQuery: document.querySelector('#rawQuery').value
+            rawQuery: document.querySelector('#rawQuery').value,
+            targetTable: document.querySelector('#targetTable').value.trim()
         });
         return response.data || {};
     }
@@ -324,15 +326,18 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    function renderColumnSelectOptions(columns) {
-        const pkSelect = document.querySelector('#pkColumn');
+    function renderColumnSelectOptions(columns, pkColumns) {
+        const pkSelect = document.querySelector('#pkColumns');
         const lockSelect = document.querySelector('#lockColumn');
-        const prevPk = pkSelect.value;
+        const prevPk = selectedValues(pkSelect);
         const prevLock = lockSelect.value;
-        pkSelect.innerHTML = '<option value="">선택 안 함</option>' + columns.map(col => `<option value="${col}">${col}</option>`).join('');
-        lockSelect.innerHTML = '<option value="">선택 안 함</option>' + columns.map(col => `<option value="${col}">${col}</option>`).join('');
-        pkSelect.value = prevPk || guessPk(columns);
-        lockSelect.value = prevLock || guessLock(columns);
+        const selectedPkColumns = prevPk.length > 0 ? prevPk : pkColumns;
+        const pkSet = new Set((selectedPkColumns || []).map(col => String(col).toUpperCase()));
+        const lockColumns = columns.filter(col => !pkSet.has(String(col).toUpperCase()));
+        pkSelect.innerHTML = columns.map(col => `<option value="${col}">${col}</option>`).join('');
+        lockSelect.innerHTML = '<option value="">선택 안 함</option>' + lockColumns.map(col => `<option value="${col}">${col}</option>`).join('');
+        setSelectedValues(pkSelect, selectedPkColumns);
+        lockSelect.value = lockColumns.includes(prevLock) ? prevLock : guessLock(lockColumns);
     }
 
     function renderTargetTableDefault(targetTable) {
@@ -380,6 +385,26 @@ document.addEventListener('DOMContentLoaded', function () {
         }));
     }
 
+    function readPkColumns() {
+        return selectedValues(document.querySelector('#pkColumns'));
+    }
+
+    function selectedValues(selectEl) {
+        if (!selectEl) {
+            return [];
+        }
+        return Array.from(selectEl.selectedOptions || [])
+            .map(option => option.value)
+            .filter(Boolean);
+    }
+
+    function setSelectedValues(selectEl, values) {
+        const selected = new Set((values || []).map(value => String(value).toUpperCase()));
+        Array.from(selectEl.options || []).forEach(option => {
+            option.selected = selected.has(String(option.value).toUpperCase());
+        });
+    }
+
     function indexRows(tbody, keyName) {
         const rows = {};
         tbody.querySelectorAll(`tr[data-${keyName}]`).forEach(row => {
@@ -400,10 +425,6 @@ document.addEventListener('DOMContentLoaded', function () {
     function isDateVar(name) {
         const lower = name.toLowerCase();
         return lower.endsWith('date') || lower.endsWith('dt') || lower.endsWith('at');
-    }
-
-    function guessPk(columns) {
-        return columns.find(col => col.endsWith('_ID')) || '';
     }
 
     function guessLock(columns) {

@@ -11,6 +11,10 @@ mybatis:
   configuration:
     map-underscore-to-camel-case: true
 
+sms:
+  scaffold:
+    db-platform: ${SMS_SCAFFOLD_DB_PLATFORM:oracle}
+
 server:
   port: ${SERVER_PORT:8081}
   servlet:

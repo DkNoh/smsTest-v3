@@ -25,6 +25,8 @@ public class ScaffoldFileApplier {
     private static final Pattern MODULE_PATTERN = Pattern.compile("^[a-z][a-z0-9]*$");
     private static final Pattern DOMAIN_ID_PATTERN = Pattern.compile("^[a-z][a-z0-9-]*$");
     private static final Pattern DOMAIN_CLASS_PATTERN = Pattern.compile("^[A-Z][A-Za-z0-9]*$");
+    private static final char WINDOWS_PATH_SEPARATOR = '\\';
+    private static final char DISPLAY_PATH_SEPARATOR = '/';
 
     private final Path outputRoot;
 
@@ -110,7 +112,7 @@ public class ScaffoldFileApplier {
     }
 
     private ScaffoldApplyFileResultDTO result(String fileName, Path targetPath, String content) {
-        String relativePath = outputRoot.relativize(targetPath).toString();
+        String relativePath = toDisplayPath(outputRoot.relativize(targetPath));
         try {
             if (!Files.exists(targetPath)) {
                 return new ScaffoldApplyFileResultDTO(fileName, relativePath, "NEW", "신규 파일");
@@ -123,6 +125,10 @@ public class ScaffoldFileApplier {
         } catch (IOException e) {
             throw new UncheckedIOException("scaffold 파일 미리보기에 실패했습니다: " + targetPath, e);
         }
+    }
+
+    private static String toDisplayPath(Path path) {
+        return path.toString().replace(WINDOWS_PATH_SEPARATOR, DISPLAY_PATH_SEPARATOR);
     }
 
     private static Path resolveOutputRoot(String configuredOutputRoot) {

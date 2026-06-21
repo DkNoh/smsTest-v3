@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SortableJS Kanban Demo</title>
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.7/Sortable.min.js"></script>
+  <style>
+    :root {
+      --bg: #f6f7fb;
+      --panel: #ffffff;
+      --line: #d9dee8;
+      --text: #1d2736;
+      --muted: #667085;
+      --todo: #2f6fdb;
+      --doing: #b45112;
+      --done: #27734f;
+      font-family: Arial, "Malgun Gothic", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    .page {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 28px 20px 36px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      margin: 0 0 6px;
+      font-size: 24px;
+      letter-spacing: 0;
+    }
+
+    .sub {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    button {
+      min-height: 38px;
+      border: 1px solid #1f5fbf;
+      border-radius: 6px;
+      padding: 0 14px;
+      color: #ffffff;
+      background: #2563eb;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      align-items: start;
+    }
+
+    .column {
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      overflow: hidden;
+    }
+
+    .column-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--line);
+      padding: 12px 14px;
+      font-weight: 800;
+    }
+
+    .column-header span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .list {
+      min-height: 220px;
+      padding: 12px;
+    }
+
+    .card {
+      border: 1px solid #d8dfeb;
+      border-left: 5px solid var(--todo);
+      border-radius: 7px;
+      margin-bottom: 10px;
+      padding: 11px 12px;
+      background: #ffffff;
+      box-shadow: 0 1px 2px rgba(16, 24, 40, 0.08);
+      cursor: grab;
+    }
+
+    .card:active {
+      cursor: grabbing;
+    }
+
+    .card[data-status="DOING"] {
+      border-left-color: var(--doing);
+    }
+
+    .card[data-status="DONE"] {
+      border-left-color: var(--done);
+    }
+
+    .card-title {
+      margin: 0 0 8px;
+      font-size: 15px;
+      font-weight: 800;
+      line-height: 1.35;
+    }
+
+    .card-meta {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .ghost {
+      opacity: 0.35;
+      background: #eef4ff;
+    }
+
+    .chosen {
+      outline: 2px solid #9dc1ff;
+    }
+
+    .data-panel {
+      margin-top: 18px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #ffffff;
+      overflow: hidden;
+    }
+
+    .data-panel h2 {
+      margin: 0;
+      border-bottom: 1px solid var(--line);
+      padding: 12px 14px;
+      font-size: 16px;
+      letter-spacing: 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    th,
+    td {
+      border-bottom: 1px solid #edf0f5;
+      padding: 9px 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      color: #465466;
+      background: #f8fafc;
+      font-size: 12px;
+    }
+
+    pre {
+      margin: 0;
+      padding: 12px 14px;
+      overflow: auto;
+      color: #243247;
+      background: #f8fafc;
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    @media (max-width: 760px) {
+      .topbar {
+        display: block;
+      }
+
+      button {
+        width: 100%;
+        margin-top: 14px;
+      }
+
+      .board {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <div class="topbar">
+      <div>
+        <h1>SortableJS Kanban Demo</h1>
+        <p class="sub">카드를 드래그하면 같은 단일 테이블 데이터의 상태값과 정렬순서가 바뀌는 예시입니다.</p>
+      </div>
+      <button type="button" id="resetButton">초기화</button>
+    </div>
+
+    <section class="board" aria-label="Kanban board">
+      <article class="column">
+        <div class="column-header">TODO <span id="todoCount">0</span></div>
+        <div class="list" id="TODO" data-status="TODO"></div>
+      </article>
+
+      <article class="column">
+        <div class="column-header">DOING <span id="doingCount">0</span></div>
+        <div class="list" id="DOING" data-status="DOING"></div>
+      </article>
+
+      <article class="column">
+        <div class="column-header">DONE <span id="doneCount">0</span></div>
+        <div class="list" id="DONE" data-status="DONE"></div>
+      </article>
+    </section>
+
+    <section class="data-panel" aria-label="Single table data preview">
+      <h2>단일 테이블 데이터 미리보기</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>CARD_ID</th>
+            <th>TITLE</th>
+            <th>STATUS_CODE</th>
+            <th>SORT_ORDER</th>
+            <th>ASSIGNEE</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+      <pre id="payloadPreview"></pre>
+    </section>
+  </main>
+
+  <script>
+    const initialCards = [
+      { cardId: 101, title: "발송 대상자 CSV 업로드", statusCode: "TODO", sortOrder: 1, assignee: "김민수" },
+      { cardId: 102, title: "템플릿 변수 검증", statusCode: "TODO", sortOrder: 2, assignee: "이서연" },
+      { cardId: 201, title: "승인 요청 화면 정리", statusCode: "DOING", sortOrder: 1, assignee: "박지훈" },
+      { cardId: 202, title: "예약 발송 정책 확인", statusCode: "DOING", sortOrder: 2, assignee: "최유진" },
+      { cardId: 301, title: "발송 이력 검색 조건", statusCode: "DONE", sortOrder: 1, assignee: "정도윤" }
+    ];
+
+    let cards = initialCards.map((card) => ({ ...card }));
+    const statuses = ["TODO", "DOING", "DONE"];
+
+    function createCardElement(card) {
+      const el = document.createElement("div");
+      el.className = "card";
+      el.dataset.id = String(card.cardId);
+      el.dataset.status = card.statusCode;
+      el.innerHTML = `
+        <p class="card-title">${escapeHtml(card.title)}</p>
+        <div class="card-meta">
+          <span>#${card.cardId}</span>
+          <span>${escapeHtml(card.assignee)}</span>
+          <span>${card.statusCode}</span>
+        </div>
+      `;
+      return el;
+    }
+
+    function renderBoard() {
+      statuses.forEach((status) => {
+        const list = document.getElementById(status);
+        list.innerHTML = "";
+
+        cards
+          .filter((card) => card.statusCode === status)
+          .sort((a, b) => a.sortOrder - b.sortOrder)
+          .forEach((card) => list.appendChild(createCardElement(card)));
+      });
+
+      renderData();
+    }
+
+    function renderData() {
+      document.getElementById("todoCount").textContent = countByStatus("TODO");
+      document.getElementById("doingCount").textContent = countByStatus("DOING");
+      document.getElementById("doneCount").textContent = countByStatus("DONE");
+
+      const sorted = [...cards].sort((a, b) => {
+        const statusDiff = statuses.indexOf(a.statusCode) - statuses.indexOf(b.statusCode);
+        return statusDiff || a.sortOrder - b.sortOrder;
+      });
+
+      document.getElementById("tableBody").innerHTML = sorted.map((card) => `
+        <tr>
+          <td>${card.cardId}</td>
+          <td>${escapeHtml(card.title)}</td>
+          <td>${card.statusCode}</td>
+          <td>${card.sortOrder}</td>
+          <td>${escapeHtml(card.assignee)}</td>
+        </tr>
+      `).join("");
+
+      document.getElementById("payloadPreview").textContent =
+        JSON.stringify(sorted.map(({ cardId, statusCode, sortOrder }) => ({
+          cardId,
+          statusCode,
+          sortOrder
+        })), null, 2);
+    }
+
+    function syncFromDom() {
+      statuses.forEach((status) => {
+        const ids = [...document.getElementById(status).children].map((el) => Number(el.dataset.id));
+
+        ids.forEach((cardId, index) => {
+          const card = cards.find((item) => item.cardId === cardId);
+          card.statusCode = status;
+          card.sortOrder = index + 1;
+        });
+      });
+
+      renderBoard();
+    }
+
+    function countByStatus(status) {
+      return cards.filter((card) => card.statusCode === status).length;
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    statuses.forEach((status) => {
+      Sortable.create(document.getElementById(status), {
+        group: "kanban",
+        animation: 150,
+        ghostClass: "ghost",
+        chosenClass: "chosen",
+        onEnd: syncFromDom
+      });
+    });
+
+    document.getElementById("resetButton").addEventListener("click", () => {
+      cards = initialCards.map((card) => ({ ...card }));
+      renderBoard();
+    });
+
+    renderBoard();
+  </script>
+</body>
+</html>
