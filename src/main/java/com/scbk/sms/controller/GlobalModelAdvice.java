@@ -37,6 +37,24 @@ public class GlobalModelAdvice {
         model.addAttribute("user", principal);
         model.addAttribute("menus", menuSource.getMenuTree(principal.getRoleCodes()));
         model.addAttribute("pageAuth", resolvePageAuth(principal, request));
+        model.addAttribute("clientIp", resolveClientIp(request));
+    }
+
+    private String resolveClientIp(HttpServletRequest request) {
+        String forwardedFor = request.getHeader("X-Forwarded-For");
+        String ip = (forwardedFor != null && !forwardedFor.isBlank()) ? forwardedFor : request.getRemoteAddr();
+        return normalizeLoopback(ip);
+    }
+
+    /**
+     * localhost 접속 시 OS/Tomcat이 IPv6 루프백("0:0:0:0:0:0:0:1" 또는 "::1")으로
+     * remoteAddr을 돌려주는 경우가 있어, 화면 표시용으로 IPv4 루프백으로 정규화한다.
+     */
+    private String normalizeLoopback(String ip) {
+        if ("0:0:0:0:0:0:0:1".equals(ip) || "::1".equals(ip)) {
+            return "127.0.0.1";
+        }
+        return ip;
     }
 
     private PageAuth resolvePageAuth(SmsUserPrincipal principal, HttpServletRequest request) {

@@ -11,6 +11,10 @@
     background-color: var(--cui-light);
 }
 
+.admin-shell .sidebar-brand {
+    min-height: 56px;
+}
+
 .admin-shell .sidebar {
     position: relative !important;
     height: 100vh !important;
