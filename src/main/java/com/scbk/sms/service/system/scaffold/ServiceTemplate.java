@@ -67,7 +67,11 @@ public final class ServiceTemplate {
               .append("    }\n\n")
               .append("    @Transactional\n")
               .append("    public void delete(").append(deleteMethodParams(model)).append(") {\n")
-              .append("        mapper.delete(").append(deleteCallArgs(model)).append(");\n")
+              .append("        int deleted = mapper.delete(").append(deleteCallArgs(model)).append(");\n")
+              .append("        if (deleted == 0) {\n")
+              .append("            // 다른 사용자가 먼저 삭제했거나 대상이 없다\n")
+              .append("            throw new CustomException(ErrorCode.DELETE_CONFLICT);\n")
+              .append("        }\n")
               .append("    }\n");
         }
 

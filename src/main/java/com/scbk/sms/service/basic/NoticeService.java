@@ -42,6 +42,10 @@ public class NoticeService {
 
     @Transactional
     public void delete(Integer noticeId) {
-        mapper.delete(noticeId);
+        int deleted = mapper.delete(noticeId);
+        if (deleted == 0) {
+            // 다른 사용자가 먼저 삭제했거나 대상이 없다
+            throw new CustomException(ErrorCode.DELETE_CONFLICT);
+        }
     }
 }

@@ -103,6 +103,8 @@ class ScaffoldTemplateTest {
 
         // Service는 update 0건을 충돌로 실패 처리한다
         assertThat(serviceCode).contains("ErrorCode.UPDATE_CONFLICT");
+        // Service는 delete 0건도 충돌로 실패 처리한다
+        assertThat(serviceCode).contains("ErrorCode.DELETE_CONFLICT");
 
         // XML은 추론한 기준 테이블로 실행 가능한 CRUD SQL을 만든다
         assertThat(xmlCode).contains("INSERT INTO SMS_HISTORY");

@@ -71,10 +71,20 @@ public final class ServiceTestTemplate {
               .append("    }\n\n")
               .append("    @Test\n")
               .append("    void 삭제는_Mapper에_위임한다() {\n")
+              .append("        // given\n")
+              .append("        given(mapper.delete(").append(samplePkArgs(model)).append(")).willReturn(1);\n\n")
               .append("        // when\n")
               .append("        service.delete(").append(samplePkArgs(model)).append(");\n\n")
               .append("        // then\n")
               .append("        then(mapper).should().delete(").append(samplePkArgs(model)).append(");\n")
+              .append("    }\n\n")
+              .append("    @Test\n")
+              .append("    void 삭제_결과가_0건이면_충돌로_실패한다() {\n")
+              .append("        // given : 다른 사용자가 먼저 삭제했거나 대상이 없는 상황\n")
+              .append("        given(mapper.delete(").append(samplePkArgs(model)).append(")).willReturn(0);\n\n")
+              .append("        // when / then\n")
+              .append("        assertThatThrownBy(() -> service.delete(").append(samplePkArgs(model)).append("))\n")
+              .append("            .isInstanceOf(CustomException.class);\n")
               .append("    }\n");
         }
 

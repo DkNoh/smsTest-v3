@@ -12,6 +12,7 @@ public enum ErrorCode {
     INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "C002", "서버 내부 오류가 발생했습니다."),
     UNSUPPORTED_CODE_TYPE(HttpStatus.BAD_REQUEST, "C003", "지원하지 않는 공통코드 타입입니다."),
     UPDATE_CONFLICT(HttpStatus.CONFLICT, "C004", "다른 사용자가 먼저 수정했거나 대상 데이터가 없습니다."),
+    DELETE_CONFLICT(HttpStatus.NOT_FOUND, "C005", "이미 삭제되었거나 삭제 대상 데이터가 없습니다."),
 
     // 권한/인증 에러
     UNAUTHORIZED(HttpStatus.UNAUTHORIZED, "A001", "인증되지 않은 사용자입니다."),
