@@ -27,8 +27,7 @@ public final class VoTemplate {
             sb.append("// 개인정보 컬럼은 Service에서 MaskingUtil로 마스킹한 값을 담는다.\n");
         }
         sb.append("@Data\n")
-          .append("public class ").append(model.domainClass()).append("VO {\n\n")
-          .append("    private long rowNum;\n");
+          .append("public class ").append(model.domainClass()).append("VO {\n\n");
 
         for (String column : model.getColumns()) {
             if (column.trim().isEmpty()) {

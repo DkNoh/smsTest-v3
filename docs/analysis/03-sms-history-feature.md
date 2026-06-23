@@ -20,8 +20,8 @@ DTO:
 - 수정 요청: `src/main/java/com/scbk/sms/dto/sms/SmsHistoryUpdateRequestDTO.java:12~25`행.
   - 화이트리스트 방식으로 PK와 수정 가능 필드만 선언한다.
   - 주석에 따라 `REG_ID`, `REG_DTTM`, 시스템 필드, 권한 필드는 선언하지 않는다: `SmsHistoryUpdateRequestDTO.java:6~10`행.
-- 결과 VO: `src/main/java/com/scbk/sms/vo/sms/SmsHistoryVO.java:7~19`행.
-  - `rowNum`, `smsHistoryId`, `requestId`, `sentAt`, `receiverNo`, `senderNo`, `sendType`, `sendStatus`, `resultCd`, `resultMsg`를 가진다.
+- 결과 VO: `src/main/java/com/scbk/sms/vo/sms/SmsHistoryVO.java:7~18`행.
+  - `smsHistoryId`, `requestId`, `sentAt`, `receiverNo`, `senderNo`, `sendType`, `sendStatus`, `resultCd`, `resultMsg`를 가진다.
 - 페이지 응답: `src/main/java/com/scbk/sms/dto/common/PageResponseDTO.java:9~18`행.
   - `contents`, `page`, `size`, `totalCount`, `totalPages`, `hasNext`, `hasPrev`를 제공한다.
 

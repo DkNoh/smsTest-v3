@@ -6,7 +6,6 @@ import lombok.Data;
 @Data
 public class SmsHistoryVO {
 
-    private long rowNum;
     private Integer smsHistoryId;
     private String requestId;
     private LocalDateTime sentAt;

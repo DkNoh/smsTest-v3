@@ -236,7 +236,7 @@
 ## 17. VoTemplate
 
 - 파일: `/Users/dk/Work/smsTest-v3/src/main/java/com/scbk/sms/service/system/scaffold/VoTemplate.java`
-- 역할: `ScaffoldModel`을 기반으로 화면 VO를 생성한다. 컬럼 타입 추론 결과를 반영하고 `rowNum`을 포함한 Lombok VO를 만든다.
+- 역할: `ScaffoldModel`을 기반으로 화면 VO를 생성한다. 컬럼 타입 추론 결과를 반영한 Lombok VO를 만든다.
 - 핵심 메서드:
   - `generate(ScaffoldModel model)` — 10~43줄: 입력 `ScaffoldModel`의 컬럼 목록과 타입 맵을 읽고 `VO` 클래스를 생성한다.
 - 생성/변환 동작 요약: 입력 `ScaffoldModel` → `com.scbk.sms.vo.<module>.<DomainClass>VO.java` 소스 문자열.

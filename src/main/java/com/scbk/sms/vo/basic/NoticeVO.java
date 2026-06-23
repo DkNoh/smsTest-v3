@@ -6,7 +6,6 @@ import lombok.Data;
 @Data
 public class NoticeVO {
 
-    private long rowNum;
     private Integer noticeId;
     private String title;
     private String noticeType;
