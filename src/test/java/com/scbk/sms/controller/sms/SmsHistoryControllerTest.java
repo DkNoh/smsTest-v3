@@ -75,11 +75,10 @@ class SmsHistoryControllerTest {
     void delete는_삭제_성공_메시지를_반환한다() throws Exception {
         // when / then
         mockMvc.perform(post("/sms/history/delete")
-                .param("smsHistoryId", "1")
-                .param("requestId", "1"))
+                .param("smsHistoryId", "1"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.message").value("삭제되었습니다."));
 
-        then(service).should().delete(1, "1");
+        then(service).should().delete(1);
     }
 }

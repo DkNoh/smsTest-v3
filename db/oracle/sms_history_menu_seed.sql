@@ -26,15 +26,15 @@ INSERT INTO SMS.TB_MENU_AUTH (
 COMMIT;
 
 -- 파일 배치 경로
--- src/main/java/com/example/sms/dto/sms/SmsHistorySearchRequestDTO.java
--- src/main/java/com/example/sms/vo/sms/SmsHistoryVO.java
--- src/main/java/com/example/sms/mapper/sms/SmsHistoryMapper.java
--- src/main/java/com/example/sms/service/sms/SmsHistoryService.java
--- src/main/java/com/example/sms/controller/sms/SmsHistoryController.java
+-- src/main/java/com/scbk/sms/dto/sms/SmsHistorySearchRequestDTO.java
+-- src/main/java/com/scbk/sms/vo/sms/SmsHistoryVO.java
+-- src/main/java/com/scbk/sms/mapper/sms/SmsHistoryMapper.java
+-- src/main/java/com/scbk/sms/service/sms/SmsHistoryService.java
+-- src/main/java/com/scbk/sms/controller/sms/SmsHistoryController.java
 -- src/main/resources/mapper/sms/SmsHistoryMapper.xml
 -- src/main/resources/templates/sms/history.html
 -- src/main/resources/static/js/sms/history.js
--- src/test/java/com/example/sms/service/sms/SmsHistoryServiceTest.java
--- src/test/java/com/example/sms/controller/sms/SmsHistoryControllerTest.java
+-- src/test/java/com/scbk/sms/service/sms/SmsHistoryServiceTest.java
+-- src/test/java/com/scbk/sms/controller/sms/SmsHistoryControllerTest.java
 
 -- 생성 후 docs/base/screen-generation-guide.md의 8~10단계(권한 확인, 검증, 문서 갱신)를 수행한다.

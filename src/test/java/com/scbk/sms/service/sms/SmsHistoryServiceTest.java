@@ -62,22 +62,22 @@ class SmsHistoryServiceTest {
     @Test
     void 삭제는_Mapper에_위임한다() {
         // given
-        given(mapper.delete(1, "1")).willReturn(1);
+        given(mapper.delete(1)).willReturn(1);
 
         // when
-        service.delete(1, "1");
+        service.delete(1);
 
         // then
-        then(mapper).should().delete(1, "1");
+        then(mapper).should().delete(1);
     }
 
     @Test
     void 삭제_결과가_0건이면_충돌로_실패한다() {
         // given : 다른 사용자가 먼저 삭제했거나 대상이 없는 상황
-        given(mapper.delete(1, "1")).willReturn(0);
+        given(mapper.delete(1)).willReturn(0);
 
         // when / then
-        assertThatThrownBy(() -> service.delete(1, "1"))
+        assertThatThrownBy(() -> service.delete(1))
             .isInstanceOf(CustomException.class);
     }
 

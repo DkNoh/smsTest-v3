@@ -18,5 +18,5 @@ public interface SmsHistoryMapper {
 
     int update(SmsHistoryUpdateRequestDTO request);
 
-    int delete(@Param("smsHistoryId") Integer smsHistoryId, @Param("requestId") String requestId);
+    int delete(@Param("smsHistoryId") Integer smsHistoryId);
 }

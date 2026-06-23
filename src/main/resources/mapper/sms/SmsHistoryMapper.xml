@@ -16,18 +16,18 @@
 
     <select id="count" resultType="int">
         SELECT COUNT(1) FROM (
-            SELECT
-                A.SMS_HISTORY_ID AS SMS_HISTORY_ID,
-                A.REQUEST_ID AS REQUEST_ID,
-                A.SENT_AT AS SENT_AT,
-                A.RECEIVER_NO AS RECEIVER_NO,
-                A.SENDER_NO AS SENDER_NO,
-                A.SEND_TYPE AS SEND_TYPE,
-                A.SEND_STATUS AS SEND_STATUS,
-                A.RESULT_CD AS RESULT_CD,
-                A.RESULT_MSG AS RESULT_MSG
-            FROM SMS.SMS_HISTORY A
-            WHERE 1=1
+            SELECT                                                                                                                                                                                              
+                     A.SMS_HISTORY_ID AS SMS_HISTORY_ID,                                                                                                                                                             
+                     A.REQUEST_ID AS REQUEST_ID,                                                                                                                                                                     
+                     A.SENT_AT AS SENT_AT,                                                                                                                                                                           
+                     A.RECEIVER_NO AS RECEIVER_NO,                                                                                                                                                                   
+                     A.SENDER_NO AS SENDER_NO,                                                                                                                                                                       
+                     A.SEND_TYPE AS SEND_TYPE,                                                                                                                                                                       
+                     A.SEND_STATUS AS SEND_STATUS,                                                                                                                                                                   
+                     A.RESULT_CD AS RESULT_CD,                                                                                                                                                                       
+                     A.RESULT_MSG AS RESULT_MSG                                                                                                                                                                      
+                 FROM SMS.SMS_HISTORY A                                                                                                                                                                              
+                 WHERE 1=1                                                                                                                                                                                           
                 <if test="sendType != null and sendType != ''">
                     AND A.SEND_TYPE = #{sendType}
                 </if>
@@ -35,7 +35,7 @@
                     AND A.SEND_STATUS = #{sendStatus}
                 </if>
                 <if test="sentAt != null and sentAt != ''">
-                    AND a.sent_at <![CDATA[ >= ]]> TO_TIMESTAMP(#{sentAt} || '000000', 'YYYYMMDDHH24MISS') AND a.sent_at <![CDATA[ < ]]> TO_TIMESTAMP(#{sentAt} || '000000', 'YYYYMMDDHH24MISS') + INTERVAL '1' DAY
+                    AND A.SENT_AT <![CDATA[ >= ]]> TO_TIMESTAMP(#{sentAt} || '000000', 'YYYYMMDDHH24MISS') AND A.SENT_AT <![CDATA[ < ]]> TO_TIMESTAMP(#{sentAt} || '000000', 'YYYYMMDDHH24MISS') + INTERVAL '1' DAY
                 </if>
                 <if test="receiverNo != null and receiverNo != ''">
                     AND A.RECEIVER_NO LIKE '%' || #{receiverNo} || '%'
@@ -47,18 +47,18 @@
     <select id="selectList" resultType="com.scbk.sms.vo.sms.SmsHistoryVO">
         SELECT A.*
         FROM (
-            SELECT
-                A.SMS_HISTORY_ID AS SMS_HISTORY_ID,
-                A.REQUEST_ID AS REQUEST_ID,
-                A.SENT_AT AS SENT_AT,
-                A.RECEIVER_NO AS RECEIVER_NO,
-                A.SENDER_NO AS SENDER_NO,
-                A.SEND_TYPE AS SEND_TYPE,
-                A.SEND_STATUS AS SEND_STATUS,
-                A.RESULT_CD AS RESULT_CD,
-                A.RESULT_MSG AS RESULT_MSG
-            FROM SMS.SMS_HISTORY A
-            WHERE 1=1
+            SELECT                                                                                                                                                                                              
+                     A.SMS_HISTORY_ID AS SMS_HISTORY_ID,                                                                                                                                                             
+                     A.REQUEST_ID AS REQUEST_ID,                                                                                                                                                                     
+                     A.SENT_AT AS SENT_AT,                                                                                                                                                                           
+                     A.RECEIVER_NO AS RECEIVER_NO,                                                                                                                                                                   
+                     A.SENDER_NO AS SENDER_NO,                                                                                                                                                                       
+                     A.SEND_TYPE AS SEND_TYPE,                                                                                                                                                                       
+                     A.SEND_STATUS AS SEND_STATUS,                                                                                                                                                                   
+                     A.RESULT_CD AS RESULT_CD,                                                                                                                                                                       
+                     A.RESULT_MSG AS RESULT_MSG                                                                                                                                                                      
+                 FROM SMS.SMS_HISTORY A                                                                                                                                                                              
+                 WHERE 1=1                                                                                                                                                                                           
                 <if test="sendType != null and sendType != ''">
                     AND A.SEND_TYPE = #{sendType}
                 </if>
@@ -66,14 +66,14 @@
                     AND A.SEND_STATUS = #{sendStatus}
                 </if>
                 <if test="sentAt != null and sentAt != ''">
-                    AND a.sent_at <![CDATA[ >= ]]> TO_TIMESTAMP(#{sentAt} || '000000', 'YYYYMMDDHH24MISS') AND a.sent_at <![CDATA[ < ]]> TO_TIMESTAMP(#{sentAt} || '000000', 'YYYYMMDDHH24MISS') + INTERVAL '1' DAY
+                    AND A.SENT_AT <![CDATA[ >= ]]> TO_TIMESTAMP(#{sentAt} || '000000', 'YYYYMMDDHH24MISS') AND A.SENT_AT <![CDATA[ < ]]> TO_TIMESTAMP(#{sentAt} || '000000', 'YYYYMMDDHH24MISS') + INTERVAL '1' DAY
                 </if>
                 <if test="receiverNo != null and receiverNo != ''">
                     AND A.RECEIVER_NO LIKE '%' || #{receiverNo} || '%'
                 </if>
         ) A
         <include refid="searchConditions"/>
-        ORDER BY A.RESULT_MSG
+        ORDER BY A.SMS_HISTORY_ID
         OFFSET #{offset} ROWS FETCH NEXT #{size} ROWS ONLY
     </select>
 
@@ -108,12 +108,10 @@
                RESULT_CD = #{resultCd,jdbcType=VARCHAR},
                RESULT_MSG = #{resultMsg,jdbcType=VARCHAR}
          WHERE SMS_HISTORY_ID = #{smsHistoryId,jdbcType=NUMERIC}
-           AND REQUEST_ID = #{requestId,jdbcType=VARCHAR}
     </update>
 
     <delete id="delete">
         DELETE FROM SMS.SMS_HISTORY WHERE SMS_HISTORY_ID = #{smsHistoryId,jdbcType=NUMERIC}
-           AND REQUEST_ID = #{requestId,jdbcType=VARCHAR}
     </delete>
 
 </mapper>

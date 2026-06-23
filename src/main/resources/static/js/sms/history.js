@@ -22,7 +22,7 @@ document.addEventListener('DOMContentLoaded', function () {
             createUrl: '/sms/history/create',
             updateUrl: '/sms/history/update',
             deleteUrl: '/sms/history/delete',
-            pkFields: ['smsHistoryId', 'requestId'],
+            pkFields: ['smsHistoryId'],
             editable: true
         }
     });
