@@ -57,14 +57,22 @@ class GlobalExceptionHandlerTest {
     }
 
     @Test
-    void Accept_헤더가_없으면_JSON으로_응답한다() {
-        // given
-        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/unknown");
+    void catch_all_예외는_원인_메시지를_노출하지_않는다() {
+        // given : SQLException 등에서 테이블명/컬럼명이 노출될 수 있는 예외
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/sms/history/data");
+        request.addHeader("Accept", "application/json, text/plain, */*");
+        String sensitiveMessage = "ORA-00942: table or view does not exist SMS.TB_MENU";
 
         // when
-        Object result = handler.handleException(new RuntimeException("원인"), request);
+        Object result = handler.handleException(new RuntimeException(sensitiveMessage), request);
 
         // then
         assertThat(result).isInstanceOf(ResponseEntity.class);
+        @SuppressWarnings("unchecked")
+        ResponseEntity<ApiResponse<Void>> response = (ResponseEntity<ApiResponse<Void>>) result;
+        assertThat(response.getBody().getMessage())
+            .isEqualTo(ErrorCode.INTERNAL_SERVER_ERROR.getMessage());
+        assertThat(response.getBody().getMessage()).doesNotContain("ORA-00942");
+        assertThat(response.getBody().getMessage()).doesNotContain("TB_MENU");
     }
 }

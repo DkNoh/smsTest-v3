@@ -62,7 +62,7 @@ public class GlobalExceptionHandler {
     protected Object handleException(Exception e, HttpServletRequest request) {
         log.error("handleException", e);
         return respond(ErrorCode.INTERNAL_SERVER_ERROR.getStatus(),
-            ErrorCode.INTERNAL_SERVER_ERROR.getMessage() + " (" + e.getMessage() + ")",
+            ErrorCode.INTERNAL_SERVER_ERROR.getMessage(),
             request);
     }
 
