@@ -6,6 +6,26 @@ const TuiCommon = (() => {
 
     const rawValue = v => (v && typeof v === 'object' && 'value' in v) ? v.value : v;
 
+    // 값 해시 기반 자동 색상 배지용 팔레트 (의미론적 색상이 필요 없을 때 사용)
+    // 같은 값은 항상 같은 색을 보장한다.
+    const BADGE_PALETTE = [
+        'bg-primary', 'bg-success', 'bg-danger', 'bg-warning text-dark',
+        'bg-info text-dark', 'bg-secondary'
+    ];
+    const badgeColorCache = {};
+    const badgeColorFor = (value) => {
+        const key = String(value);
+        if (!(key in badgeColorCache)) {
+            let hash = 0;
+            for (let i = 0; i < key.length; i++) {
+                hash = ((hash << 5) - hash) + key.charCodeAt(i);
+                hash |= 0;
+            }
+            badgeColorCache[key] = BADGE_PALETTE[Math.abs(hash) % BADGE_PALETTE.length];
+        }
+        return badgeColorCache[key];
+    };
+
     const formatDate = (value, pattern = 'YYYY-MM-DD') => {
         const val = rawValue(value);
         if (!val) return '-';
@@ -36,8 +56,8 @@ const TuiCommon = (() => {
         sendStatus: ({ value }) => {
             const map = {
                 SUCCESS: ['bg-success', '성공'],
-                FAIL:    ['bg-danger',  '실패'],
-                WAIT:    ['bg-warning text-dark', '대기'],
+                FAIL: ['bg-danger', '실패'],
+                WAIT: ['bg-warning text-dark', '대기'],
             };
             const clsAndLabel = map[value] || ['', value || '-'];
             const cls = clsAndLabel[0];
@@ -46,8 +66,8 @@ const TuiCommon = (() => {
         },
 
         sendType: ({ value }) => {
-            const cls   = { SMS: 'bg-primary', LMS: 'bg-info text-dark', ALIMTALK: 'bg-warning text-dark' };
-            const label = { SMS: 'SMS',       LMS: 'LMS',      ALIMTALK: '알림톡' };
+            const cls = { SMS: 'bg-primary', LMS: 'bg-info text-dark', ALIMTALK: 'bg-warning text-dark' };
+            const label = { SMS: 'SMS', LMS: 'LMS', ALIMTALK: '알림톡' };
             return value
                 ? `<span class="badge ${cls[value] || 'bg-secondary'}">${label[value] || value}</span>`
                 : '-';
@@ -57,14 +77,34 @@ const TuiCommon = (() => {
             value === 'Y'
                 ? '<span class="badge bg-primary">Y</span>'
                 : '<span class="badge bg-secondary">N</span>',
+
+        // 값이 뭐가 오든 자동으로 색상을 다르게 뿌려주는 범용 배지 포매터.
+        // 값(또는 라벨)을 해시해 팔레트에서 색을 고른다. 같은 값은 항상 같은 색.
+        // 코드값→한글 라벨 매핑이 필요하면 TuiCommon.autoBadge({ APPR:'승인', ... }) 팩토리를 사용한다.
+        autoBadge: ({ value }) => {
+            const val = rawValue(value);
+            if (!val) return '-';
+            const label = String(val);
+            return `<span class="badge ${badgeColorFor(label)}">${label}</span>`;
+        },
+    };
+
+    // autoBadge의 라벨 매핑 버전 (팩토리).
+    // 사용: formatter: TuiCommon.autoBadge({ APPR: '승인', REJ: '반려', REAPPR: '재승인' })
+    // 색은 라벨(한글) 기준으로 자동 할당되므로, 승인/반려/재승인은 각각 다른 색이 보장된다(팔레트 범위 내).
+    const autoBadge = (labels = {}) => ({ value }) => {
+        const code = rawValue(value);
+        if (!code) return '-';
+        const label = labels[code] || String(code);
+        return `<span class="badge ${badgeColorFor(label)}">${label}</span>`;
     };
 
     const gridDefaults = {
-        rowHeight:     42,
-        bodyHeight:    'auto',
+        rowHeight: 42,
+        bodyHeight: 'auto',
         minBodyHeight: 300,
-        scrollX:       false,
-        scrollY:       false,
+        scrollX: true,
+        scrollY: false,
     };
 
     // v3 화면 골격 기준은 id="total-count"다 (screen-convention.md)
@@ -80,29 +120,29 @@ const TuiCommon = (() => {
             return;
         }
 
-        const BLOCK     = 10;
+        const BLOCK = 10;
         const startPage = Math.floor((page - 1) / BLOCK) * BLOCK + 1;
-        const endPage   = Math.min(startPage + BLOCK - 1, totalPages);
+        const endPage = Math.min(startPage + BLOCK - 1, totalPages);
 
         const fnName = `__movePage_${paginationId.replace(/-/g, '_')}`;
-        
+
         wrap.classList.add('d-flex', 'justify-content-center', 'gap-1');
 
         const btn = (label, p, disabled) =>
             `<button type="button" class="btn btn-sm btn-outline-secondary"
                      ${disabled ? 'disabled aria-disabled="true"' : `onclick="${fnName}(${p})"`}>${label}</button>`;
 
-        let html = btn('«', 1,             startPage === 1);
-        html    += btn('‹', startPage - 1, startPage === 1);
+        let html = btn('«', 1, startPage === 1);
+        html += btn('‹', startPage - 1, startPage === 1);
         for (let p = startPage; p <= endPage; p++) {
             html += `<button type="button" class="btn btn-sm ${p === page ? 'btn-primary' : 'btn-outline-secondary'}"
                              onclick="${fnName}(${p})">${p}</button>`;
         }
         html += btn('›', endPage + 1, endPage === totalPages);
-        html += btn('»', totalPages,  endPage === totalPages);
+        html += btn('»', totalPages, endPage === totalPages);
 
-        wrap.innerHTML    = html;
-        window[fnName] = onMove; 
+        wrap.innerHTML = html;
+        window[fnName] = onMove;
     };
 
     const exportExcel = (gridObj, fileName = 'download') => {
@@ -112,6 +152,7 @@ const TuiCommon = (() => {
 
     return {
         fmt,
+        autoBadge,
         formatDate,
         maskValue,
         gridDefaults,

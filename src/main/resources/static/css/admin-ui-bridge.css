@@ -45,7 +45,7 @@
 }
 
 .admin-shell .sidebar .nav-link.active .nav-icon.lucide,
-.admin-shell .sidebar .nav-group.show > .nav-link .nav-icon.lucide {
+.admin-shell .sidebar .nav-group.show>.nav-link .nav-icon.lucide {
     color: var(--cui-sidebar-nav-link-active-icon-color);
 }
 
@@ -292,15 +292,22 @@
 /* Scaffold generated screen controls */
 .scaffold-search-control,
 .scaffold-radio-group {
-    width: 160px;
+    width: var(--sms-search-control-width);
 }
 
 .toast-grid-page-size {
-    width: 80px;
+    width: var(--sms-page-size-width);
+}
+
+.toast-grid-card {
+    min-width: 0;
+    overflow: hidden;
 }
 
 .toast-grid {
     width: 100%;
+    max-width: 100%;
+    overflow: hidden;
 }
 
 /* DatePicker layering */
@@ -328,7 +335,7 @@
 
 .history-date-field,
 .scaffold-date-field-md {
-    width: 160px;
+    width: var(--sms-search-control-width);
 }
 
 .scaffold-date-field-sm {
@@ -338,13 +345,13 @@
 .history-datepicker-input,
 .scaffold-datepicker-input {
     width: 100%;
-    height: 38px;
+    height: var(--sms-control-height);
 }
 
 #sentAtPickerLayer,
 .scaffold-date-picker-layer {
     position: absolute;
-    top: 38px;
+    top: var(--sms-control-height);
     left: 0;
     z-index: 3000;
 }
@@ -358,4 +365,37 @@
 .scaffold-date-picker-layer .tui-datepicker {
     z-index: 3000;
     box-shadow: var(--cui-box-shadow-lg);
+}
+
+/* ===== A11Y: 키보드 포커스 표시 보강 ===== */
+:focus-visible {
+    outline: 2px solid var(--cui-primary);
+    outline-offset: 2px;
+}
+
+.btn:focus-visible,
+.nav-link:focus-visible,
+.form-control:focus-visible,
+.form-select:focus-visible,
+a:focus-visible {
+    outline: 2px solid var(--cui-primary);
+    outline-offset: 2px;
+}
+
+/* 스킵 네비게이션 (본문 건너뛰기) */
+.skip-link {
+    position: absolute;
+    top: -40px;
+    left: 0;
+    background: var(--cui-primary);
+    color: var(--cui-white);
+    padding: 8px 16px;
+    z-index: 1100;
+    text-decoration: none;
+    border-radius: 0 0 var(--cui-border-radius) var(--cui-border-radius);
+    transition: top .2s;
+}
+
+.skip-link:focus {
+    top: 0;
 }

@@ -1,35 +1,38 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
 <body>
     <!-- CoreUI Header 컴포넌트 -->
-    <header class="header header-sticky p-0 border-bottom" th:fragment="header" style="z-index: 10;">
-        <div class="container-fluid px-3" style="min-height: 56px;">
+    <header class="header header-sticky p-0 border-bottom app-header" th:fragment="header" role="banner">
+        <div class="container-fluid px-3 header-bar">
 
             <!-- 사이드바 토글 버튼 (왼쪽 끝) -->
-            <button id="sidebarToggleBtn" type="button" title="사이드바 접기/펼치기"
-                    class="btn btn-link p-0 me-3 text-secondary d-flex align-items-center"
-                    style="text-decoration:none; box-shadow:none;">
-                <i id="toggleIcon" data-lucide="panel-left-close" class="layout-icon"></i>
+            <button id="sidebarToggleBtn" type="button"
+                class="btn btn-link p-0 me-3 text-secondary d-flex align-items-center header-toggle-btn"
+                aria-label="사이드바 메뉴 열기/닫기" aria-expanded="false" aria-controls="sidebar">
+                <i id="toggleIcon" data-lucide="panel-left-close" class="layout-icon" aria-hidden="true"></i>
             </button>
 
             <!-- 현재 페이지 타이틀 렌더링 -->
-            <ul class="header-nav d-none d-md-flex">
+            <ul class="header-nav d-none d-md-flex" role="navigation" aria-label="현재 페이지 위치">
                 <li class="nav-item">
-                    <span class="nav-link fs-6 fw-bold text-dark" id="headerTitle"></span>
+                    <span class="nav-link fs-6 fw-bold text-dark" id="headerTitle" aria-current="page"></span>
                 </li>
             </ul>
 
             <!-- 사용자/로그아웃 메뉴 -->
-            <ul class="header-nav ms-auto">
-                <li class="nav-item d-flex align-items-center">
-                    <span class="me-2 text-secondary" style="font-size: 0.9rem;"
-                          th:text="${user != null ? user.empNm + ' 님 (' + user.depNm + ')' : ''}">사용자 님</span>
-                    <div class="avatar avatar-md border bg-light text-dark fw-bold me-3" style="width: 32px; height: 32px; font-size: 0.85rem; display: flex; align-items: center; justify-content: center;">A</div>
+            <ul class="header-nav ms-auto" role="menubar" aria-label="사용자 메뉴">
+                <li class="nav-item d-flex align-items-center" role="none">
+                    <span class="me-2 text-secondary header-user-text"
+                        th:text="${user != null ? user.empNm + ' 님 (' + user.depNm + ')' : ''}">사용자 님</span>
+                    <div class="avatar avatar-md border bg-light text-dark fw-bold me-3 header-avatar"
+                        aria-hidden="true">A</div>
                 </li>
-                <li class="nav-item">
+                <li class="nav-item" role="none">
                     <form th:action="@{/logout}" method="post" class="m-0 d-flex align-items-center">
-                        <button type="submit" class="btn btn-link nav-link px-0 text-secondary" title="로그아웃" style="text-decoration: none;">
-                            <i data-lucide="log-out" class="layout-icon"></i>
+                        <button type="submit" class="btn btn-link nav-link px-0 text-secondary header-logout-btn"
+                            aria-label="로그아웃">
+                            <i data-lucide="log-out" class="layout-icon" aria-hidden="true"></i>
                         </button>
                     </form>
                 </li>
@@ -64,4 +67,5 @@
         </script>
     </header>
 </body>
+
 </html>

@@ -1,3 +1,24 @@
+/* ===== Design Tokens (프로젝트 고유값만 --sms-* 네임스페이스) ===== */
+:root {
+    /* Layout */
+    --sms-header-height: 56px;
+    --sms-sidebar-width: 256px;
+    --sms-sidebar-collapsed-width: 64px;
+
+    /* Component sizes */
+    --sms-control-height: 38px;
+    --sms-search-control-width: 160px;
+    --sms-page-size-width: 80px;
+
+    /* Icon */
+    --sms-icon-sm: .95rem;
+    --sms-icon-md: 1rem;
+    --sms-icon-lg: 1.1rem;
+
+    /* Avatar */
+    --sms-avatar-md: 32px;
+}
+
 /* Admin shell layout. CoreUI components keep their own visual styling. */
 .admin-shell {
     --sms-sidebar-width: 256px;
@@ -67,4 +88,35 @@
     flex-grow: 1;
     overflow-y: auto;
     padding: 1.5rem;
+}
+
+/* ===== Header (3.5 인라인 스타일 → 토큰/클래스) ===== */
+.admin-shell .header.app-header {
+    z-index: 1020;
+}
+
+.admin-shell .header-bar {
+    min-height: var(--sms-header-height);
+}
+
+.admin-shell .header-toggle-btn {
+    text-decoration: none;
+    box-shadow: none;
+}
+
+.admin-shell .header-user-text {
+    font-size: .9rem;
+}
+
+.admin-shell .header-avatar {
+    width: var(--sms-avatar-md);
+    height: var(--sms-avatar-md);
+    font-size: .85rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.admin-shell .header-logout-btn {
+    text-decoration: none;
 }

@@ -1,37 +1,84 @@
 <!DOCTYPE html>
 <html lang="ko" xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>오류</title>
-    <!-- 미인증 상태에서도 표시될 수 있어 공통 레이아웃을 쓰지 않는 독립 화면이다 -->
+    <!-- 미인증 상태에서도 표시될 수 있어 공통 레이아웃을 쓰지 않는 독립 화면이다.
+         공통 Design Token/색상 체계를 사용하기 위해 CoreUI CSS를 직접 링크한다. -->
+    <link rel="stylesheet" th:href="@{/vendor/coreui/css/coreui.min.css}">
     <style>
         body {
-            margin: 0; height: 100vh; display: flex; align-items: center; justify-content: center;
-            background: #f1f3f5;
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--cui-tertiary-bg);
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         }
+
         .error-card {
-            background: #fff; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-            padding: 48px 56px; max-width: 560px; text-align: center;
+            background: var(--cui-body-bg);
+            border-radius: var(--cui-border-radius-lg);
+            box-shadow: var(--cui-box-shadow-lg);
+            padding: 48px 56px;
+            max-width: 560px;
+            text-align: center;
         }
-        .error-status { font-size: 48px; font-weight: 700; color: #dc3545; margin: 0 0 8px; }
-        .error-message { color: #495057; font-size: 15px; line-height: 1.6; margin: 0 0 28px; word-break: keep-all; }
-        .error-actions a, .error-actions button {
-            display: inline-block; padding: 10px 24px; border-radius: 6px; font-size: 14px;
-            text-decoration: none; cursor: pointer; border: 1px solid #ced4da; background: #fff; color: #495057;
+
+        .error-status {
+            font-size: 48px;
+            font-weight: 700;
+            color: var(--cui-danger);
+            margin: 0 0 8px;
         }
-        .error-actions a.primary { background: #0d6efd; border-color: #0d6efd; color: #fff; margin-right: 8px; }
+
+        .error-message {
+            color: var(--cui-secondary-color);
+            font-size: 15px;
+            line-height: 1.6;
+            margin: 0 0 28px;
+            word-break: keep-all;
+        }
+
+        .error-actions a,
+        .error-actions button {
+            display: inline-block;
+            padding: 10px 24px;
+            border-radius: var(--cui-border-radius);
+            font-size: 14px;
+            text-decoration: none;
+            cursor: pointer;
+            border: 1px solid var(--cui-border-color);
+            background: var(--cui-body-bg);
+            color: var(--cui-secondary-color);
+        }
+
+        .error-actions a.primary {
+            background: var(--cui-primary);
+            border-color: var(--cui-primary);
+            color: var(--cui-white);
+            margin-right: 8px;
+        }
+
+        .error-actions a.primary:hover,
+        .error-actions button:hover {
+            opacity: .9;
+        }
     </style>
 </head>
+
 <body>
-<div class="error-card">
-    <p class="error-status" th:text="${status}">500</p>
-    <p class="error-message" th:text="${message}">오류가 발생했습니다.</p>
-    <div class="error-actions">
-        <a class="primary" th:href="@{/}">홈으로</a>
-        <button type="button" onclick="history.back()">이전 화면</button>
+    <div class="error-card" role="alert" aria-live="assertive">
+        <p class="error-status" th:text="${status}">500</p>
+        <p class="error-message" th:text="${message}">오류가 발생했습니다.</p>
+        <div class="error-actions">
+            <a class="primary" th:href="@{/}" aria-label="홈으로 이동">홈으로</a>
+            <button type="button" onclick="history.back()" aria-label="이전 화면으로 이동">이전 화면</button>
+        </div>
     </div>
-</div>
 </body>
+
 </html>

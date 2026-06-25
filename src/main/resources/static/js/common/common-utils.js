@@ -58,7 +58,7 @@ document.addEventListener("DOMContentLoaded", () => {
         overlay.innerHTML = '<div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>';
         document.body.appendChild(overlay);
     }
-    
+
     // 커스텀 모달 초기화
     if (!document.getElementById('custom-modal-overlay')) {
         const modalOverlay = document.createElement('div');
@@ -91,11 +91,31 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 // ════════════════════════════════════════════════════
-// 커스텀 알림/확인 모달 제어 로직
+// 커스텀 알림/확인 모달 제어 로직 (큐 기반: 동시 다중 호출 시 순차 표시)
 // ════════════════════════════════════════════════════
+const _modalQueue = [];
+let _isModalShowing = false;
+
+const _processModalQueue = () => {
+    if (_isModalShowing || _modalQueue.length === 0) return;
+    const item = _modalQueue.shift();
+    _isModalShowing = true;
+    _renderCustomModal(item);
+};
+
 const _showCustomModal = (type, msg, title, onConfirm, onCancel) => {
+    _modalQueue.push({ type, msg, title, onConfirm, onCancel });
+    _processModalQueue();
+};
+
+const _renderCustomModal = ({ type, msg, title, onConfirm, onCancel }) => {
     const overlay = document.getElementById('custom-modal-overlay');
-    if (!overlay) return alert(msg); // fallback
+    if (!overlay) {
+        _isModalShowing = false;
+        alert(msg);
+        _processModalQueue();
+        return;
+    }
 
     const titleEl = document.getElementById('custom-modal-title');
     const msgEl = document.getElementById('custom-modal-msg');
@@ -114,25 +134,34 @@ const _showCustomModal = (type, msg, title, onConfirm, onCancel) => {
     // 기존 이벤트 리스너 제거용 clone
     const newConfirmBtn = confirmBtn.cloneNode(true);
     confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
-    
+
     const newCancelBtn = cancelBtn.cloneNode(true);
     cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
 
-    newConfirmBtn.addEventListener('click', () => {
+    const _closeAndNext = (callback) => {
         hideModalElement(overlay);
-        if (onConfirm) onConfirm();
-    });
+        _isModalShowing = false;
+        if (callback) callback();
+        _processModalQueue();
+    };
 
-    newCancelBtn.addEventListener('click', () => {
-        hideModalElement(overlay);
-        if (onCancel) onCancel();
-    });
+    newConfirmBtn.addEventListener('click', () => _closeAndNext(onConfirm));
+    newCancelBtn.addEventListener('click', () => _closeAndNext(onCancel));
+
+    // ESC 키 닫기
+    const _escHandler = (e) => {
+        if (e.key === 'Escape') {
+            e.stopPropagation();
+            document.removeEventListener('keydown', _escHandler);
+            _closeAndNext(onCancel);
+        }
+    };
+    document.addEventListener('keydown', _escHandler);
 
     showModalElement(overlay);
     refreshLucideIcons();
-    
+
     // 모달이 열릴 때 확인 버튼에 포커스를 강제로 주어 엔터/스페이스로 바로 닫을 수 있게 처리
-    // 브라우저 렌더링(visibility 변경 등) 완료 후 포커스를 잡도록 50ms 지연
     setTimeout(() => {
         newConfirmBtn.focus({ preventScroll: true });
     }, 50);
@@ -162,7 +191,7 @@ const _showToast = (msg, type = 'info') => {
     toastEl.setAttribute('role', 'alert');
     toastEl.setAttribute('aria-live', 'assertive');
     toastEl.setAttribute('aria-atomic', 'true');
-    
+
     // 닫기 버튼 렌더링
     toastEl.innerHTML = `
         <div class="d-flex">
@@ -172,10 +201,10 @@ const _showToast = (msg, type = 'info') => {
             <button type="button" class="btn-close btn-close-white me-2 m-auto" data-coreui-dismiss="toast" aria-label="Close"></button>
         </div>
     `;
-    
+
     container.appendChild(toastEl);
     refreshLucideIcons();
-    
+
     // CoreUI (또는 Bootstrap) Toast API 사용
     if (typeof coreui !== 'undefined' && coreui.Toast) {
         const toast = new coreui.Toast(toastEl, { delay: 3000 });
@@ -233,7 +262,7 @@ axios.interceptors.request.use(
 axios.interceptors.response.use(
     response => {
         hideSpinner();
-        
+
         // 백엔드에서 온 데이터가 우리가 만든 ApiResponse 규격(code가 존재)인 경우
         if (response.data && response.data.code !== undefined) {
             if (response.data.code === 200) {
@@ -250,10 +279,33 @@ axios.interceptors.response.use(
     },
     error => {
         hideSpinner();
-        
+
         // HTTP 상태 코드가 4xx, 5xx 인 경우 (GlobalExceptionHandler 통과)
-        if (error.response && error.response.data && error.response.data.message) {
-            _showCustomModal('alert', error.response.data.message, '오류');
+        if (error.response && error.response.data) {
+            const apiErr = error.response.data;
+            let displayMsg = apiErr.message || '오류가 발생했습니다.';
+
+            // @Valid 실패 시 필드별 에러(errors[])가 있으면 목록 형태로 포맷팅
+            if (apiErr.errors && Array.isArray(apiErr.errors) && apiErr.errors.length > 0) {
+                const errorList = apiErr.errors.map(e => `• ${e.message}`).join('\n');
+                displayMsg = `${apiErr.message}\n\n${errorList}`;
+
+                // 각 필드에 에러 스타일 적용 (data-field 속성 기반)
+                apiErr.errors.forEach(e => {
+                    const fieldEl = document.querySelector(`[data-field="${e.field}"]`)
+                        || document.querySelector(`#${e.field}`)
+                        || document.querySelector(`[name="${e.field}"]`);
+                    if (fieldEl) {
+                        fieldEl.classList.add('is-invalid');
+                        // 값 변경 시 에러 스타일 제거
+                        const _clearInvalid = () => fieldEl.classList.remove('is-invalid');
+                        fieldEl.addEventListener('input', _clearInvalid, { once: true });
+                        fieldEl.addEventListener('change', _clearInvalid, { once: true });
+                    }
+                });
+            }
+
+            _showCustomModal('alert', displayMsg, '오류');
         } else {
             _showCustomModal('alert', '서버와 통신 중 알 수 없는 오류가 발생했습니다.', '시스템 오류');
         }
@@ -302,28 +354,28 @@ const CommonUtils = (() => {
     //  날짜 / 시간 검색 폼 초기화 유틸
     // ════════════════════════════════════════════════════
     const setDefaultDateTime = (forceReset = false) => {
-        const now      = dayjs();
+        const now = dayjs();
         const todayStr = now.format('YYYY-MM-DD');
         const fromTime = now.subtract(1, 'hour').format('HH:mm'); // 현재 -1시간
-        const toTime   = now.add(1, 'hour').format('HH:mm');      // 현재 +1시간
+        const toTime = now.add(1, 'hour').format('HH:mm');      // 현재 +1시간
 
         // ① 분리형: #startDate / #startTime / #endDate / #endTime
         const startDate = document.querySelector('#startDate');
-        const endDate   = document.querySelector('#endDate');
+        const endDate = document.querySelector('#endDate');
         const startTime = document.querySelector('#startTime');
-        const endTime   = document.querySelector('#endTime');
+        const endTime = document.querySelector('#endTime');
 
         if (startDate && (forceReset || !startDate.value)) startDate.value = todayStr;
-        if (endDate   && (forceReset || !endDate.value))   endDate.value   = todayStr;
+        if (endDate && (forceReset || !endDate.value)) endDate.value = todayStr;
         if (startTime && (forceReset || !startTime.value)) startTime.value = fromTime;
-        if (endTime   && (forceReset || !endTime.value))   endTime.value   = toTime;
+        if (endTime && (forceReset || !endTime.value)) endTime.value = toTime;
 
         // ② 통합형: datetime-local input (#startDateTime / #endDateTime 또는 data-default-date)
         const startDT = document.querySelector('#startDateTime');
-        const endDT   = document.querySelector('#endDateTime');
+        const endDT = document.querySelector('#endDateTime');
 
         if (startDT && (forceReset || !startDT.value)) startDT.value = `${todayStr}T00:00`;
-        if (endDT   && (forceReset || !endDT.value))   endDT.value   = `${todayStr}T23:59`;
+        if (endDT && (forceReset || !endDT.value)) endDT.value = `${todayStr}T23:59`;
 
         // ③ 단순 date type input (날짜만, 시간 없음)
         document.querySelectorAll('input[type="date"]').forEach(el => {
@@ -334,23 +386,23 @@ const CommonUtils = (() => {
     const getSearchParams = () => {
         const startDate = document.querySelector('#startDate')?.value || '';
         const startTime = document.querySelector('#startTime')?.value || '00:00';
-        const endDate   = document.querySelector('#endDate')?.value   || '';
-        const endTime   = document.querySelector('#endTime')?.value   || '23:59';
+        const endDate = document.querySelector('#endDate')?.value || '';
+        const endTime = document.querySelector('#endTime')?.value || '23:59';
 
         return {
             startDateTime: startDate ? `${startDate}T${startTime}:00` : '',
-            endDateTime:   endDate   ? `${endDate}T${endTime}:59`     : '',
-            receiverNo:    document.querySelector('#receiverNo')?.value.trim() || '',
-            sendType:      document.querySelector('#sendType')?.value          || '',
+            endDateTime: endDate ? `${endDate}T${endTime}:59` : '',
+            receiverNo: document.querySelector('#receiverNo')?.value.trim() || '',
+            sendType: document.querySelector('#sendType')?.value || '',
         };
     };
 
     const resetFields = () => {
         const receiverNo = document.querySelector('#receiverNo');
-        const sendType   = document.querySelector('#sendType');
+        const sendType = document.querySelector('#sendType');
 
         if (receiverNo) receiverNo.value = '';
-        if (sendType)   sendType.value   = '';
+        if (sendType) sendType.value = '';
 
         setDefaultDateTime(true);
     };
@@ -429,16 +481,16 @@ const CommonUtils = (() => {
     // ════════════════════════════════════════════════════
     const initAutocomplete = ({
         inputEl, balloonEl, apiUrl,
-        syncCombo  = null,
-        paramName  = 'keyword',
-        minLength  = 1,
+        syncCombo = null,
+        paramName = 'keyword',
+        minLength = 1,
         debounceMs = 200,
         renderItem = null,
-        onSelect   = null
+        onSelect = null
     } = {}) => {
-        const input   = typeof inputEl   === 'string' ? document.querySelector(inputEl)   : inputEl;
+        const input = typeof inputEl === 'string' ? document.querySelector(inputEl) : inputEl;
         const balloon = typeof balloonEl === 'string' ? document.querySelector(balloonEl) : balloonEl;
-        const combo   = syncCombo ? (typeof syncCombo === 'string' ? document.querySelector(syncCombo) : syncCombo) : null;
+        const combo = syncCombo ? (typeof syncCombo === 'string' ? document.querySelector(syncCombo) : syncCombo) : null;
 
         if (!input || !balloon) {
             console.warn('[Autocomplete] inputEl 또는 balloonEl을 찾을 수 없습니다.', { inputEl, balloonEl });

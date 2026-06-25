@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
+import java.util.List;
+
 /**
  * 공통 예외 변환 지점. Controller에서 예외를 삼키지 않고 이 클래스로 전파한다.
  *
@@ -32,16 +34,27 @@ public class GlobalExceptionHandler {
         return respond(errorCode.getStatus(), errorCode.getMessage(), request);
     }
 
-    /** [2] @Valid 검증 실패 */
+    /** [2] @Valid 검증 실패 — JSON 요청은 필드별 에러(errors[])를 포함하여 반환 */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     protected Object handleMethodArgumentNotValidException(MethodArgumentNotValidException e,
-                                                           HttpServletRequest request) {
+            HttpServletRequest request) {
         BindingResult bindingResult = e.getBindingResult();
-        String errorMessage = bindingResult.getAllErrors().get(0).getDefaultMessage();
-        log.warn("입력값 검증 실패: {}", errorMessage);
+
+        // 모든 필드 에러를 추출 (첫 번째 1개만이 아닌)
+        List<ApiResponse.FieldError> errors = bindingResult.getFieldErrors().stream()
+                .map(fe -> new ApiResponse.FieldError(fe.getField(), fe.getDefaultMessage()))
+                .toList();
+
+        String firstMessage = errors.isEmpty()
+                ? ErrorCode.INVALID_INPUT_VALUE.getMessage()
+                : errors.get(0).message();
+        log.warn("입력값 검증 실패: {}건", errors.size());
+
         return respond(ErrorCode.INVALID_INPUT_VALUE.getStatus(),
-            errorMessage != null ? errorMessage : ErrorCode.INVALID_INPUT_VALUE.getMessage(),
-            request);
+                ErrorCode.INVALID_INPUT_VALUE.getMessage(),
+                firstMessage,
+                errors,
+                request);
     }
 
     /**
@@ -51,8 +64,9 @@ public class GlobalExceptionHandler {
     protected Object handleNoResourceFound(NoResourceFoundException e, HttpServletRequest request) {
         String url = e.getResourcePath();
         String message = String.format(
-            "요청한 URL [%s]에 대한 화면이 없습니다. "
-            + "원인: ① 컨트롤러 미등록 ② 메뉴 URL 오타 ③ 파일 미배치 중 하나를 확인하세요.", url);
+                "요청한 URL [%s]에 대한 화면이 없습니다. "
+                        + "원인: ① 컨트롤러 미등록 ② 메뉴 URL 오타 ③ 파일 미배치 중 하나를 확인하세요.",
+                url);
         log.warn("NoResourceFoundException — URL: {}", url);
         return respond(HttpStatus.NOT_FOUND, message, request);
     }
@@ -62,19 +76,29 @@ public class GlobalExceptionHandler {
     protected Object handleException(Exception e, HttpServletRequest request) {
         log.error("handleException", e);
         return respond(ErrorCode.INTERNAL_SERVER_ERROR.getStatus(),
-            ErrorCode.INTERNAL_SERVER_ERROR.getMessage(),
-            request);
+                ErrorCode.INTERNAL_SERVER_ERROR.getMessage(),
+                request);
     }
 
     private Object respond(HttpStatus status, String message, HttpServletRequest request) {
+        return respond(status, message, message, null, request);
+    }
+
+    /** 에러 응답 + 필드별 에러(errors[])를 함께 반환하는 오버로드 (JSON 요청용) */
+    private Object respond(HttpStatus status, String apiMessage, String htmlMessage,
+            List<ApiResponse.FieldError> errors, HttpServletRequest request) {
         if (isHtmlRequest(request)) {
             ModelAndView mav = new ModelAndView("error/error");
             mav.setStatus(status);
             mav.addObject("status", status.value());
-            mav.addObject("message", message);
+            mav.addObject("message", htmlMessage);
             return mav;
         }
-        return new ResponseEntity<>(ApiResponse.error(status.value(), message), status);
+        if (errors != null) {
+            return new ResponseEntity<>(
+                    ApiResponse.error(status.value(), apiMessage, errors), status);
+        }
+        return new ResponseEntity<>(ApiResponse.error(status.value(), apiMessage), status);
     }
 
     /** 브라우저 화면 이동(Accept: text/html)과 JSON 호출(axios/fetch)을 구분한다. */
